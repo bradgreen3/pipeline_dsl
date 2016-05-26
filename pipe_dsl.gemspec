@@ -9,14 +9,14 @@ Gem::Specification.new do |spec|
   spec.authors       = ["Justin Hart"]
   spec.email         = ["jhart@onyxraven.com"]
 
-  spec.summary       = %q{A DSL for generating and managing AWS Datapipeline definitions}
-  spec.description   = %q{A DSL and code for generating datapipeline definitions, and commands for uploading and managing datapipeline in AWS}
-  spec.homepage      = "https://github.com/Ibotta/pipe_dsl"
+  spec.summary       = %q{A composable ruby DSL for the AWS DataPipeline}
+  spec.description   = %q{A DSL for building components and entire definitions for the AWS Datapipeline}
+  spec.homepage      = "https://github.com/Ibotta/pipeline_dsl"
   spec.license       = "MIT"
 
   spec.files         = `git ls-files -z`.split("\x0").reject { |f| f.match(%r{^(test|spec|features)/}) }
-  spec.bindir        = "bin"
-  spec.executables   = spec.files.grep(%r{^bin/}) { |f| File.basename(f) }
+  spec.bindir        = "exe"
+  spec.executables   = spec.files.grep(%r{^exe/}) { |f| File.basename(f) }
   spec.require_paths = ["lib"]
 
   spec.add_dependency 'aws-sdk-resources', '~> 2'
@@ -24,10 +24,11 @@ Gem::Specification.new do |spec|
 
   spec.add_development_dependency "bundler", "~> 1.12"
   spec.add_development_dependency "rake", "~> 10.0"
-  spec.add_development_dependency "rspec"
+  spec.add_development_dependency "rspec", "~> 3.0"
 
   #explode pry-plus into pieces
   spec.add_development_dependency 'bond'
+  spec.add_development_dependency 'pry'
   spec.add_development_dependency 'pry-byebug'
   spec.add_development_dependency 'pry-doc'
   spec.add_development_dependency 'pry-docmore'
@@ -35,4 +36,5 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency 'pry-rescue'
   spec.add_development_dependency "awesome_print"
   #end explode pry-plus
+
 end

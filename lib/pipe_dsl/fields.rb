@@ -1,11 +1,18 @@
 module PipeDsl
+
+  #wrap an array of PipelineObject fields
   class Fields < Array
 
+    #new fields list
+    # @param [Array,Hash] (optional) field list to init with
+    # @yield [self] dsl style
     def initialize(fields=nil, &block)
       super()
       concat(fields, &block)
     end
 
+    #get hash for cli serialization
+    # @return [Hash] for serialization
     def as_cli_json
       self.each_with_object({}) do |f, hsh|
         if !f.ref_value.nil?
@@ -19,6 +26,10 @@ module PipeDsl
       end
     end
 
+    #add fields to this list
+    # @param [Hash,Array] fields to add
+    # @yield [self] dsl style
+    # @return [self]
     def concat(fields=nil)
       case fields
       when Hash
@@ -33,7 +44,11 @@ module PipeDsl
       self
     end
 
-    #todo this might need to be in a better spot?
+    # field as a reference
+    # @todo this might need to be in a better spot?
+    # @param [String,Aws::DataPipeline::Types::Field] key, or field to add as a ref
+    # @param [Hash,String,Aws::DataPipeline::Types::Field,Aws::DataPipeline::Types::PipelineObject] reference to add as a ref
+    # @return [Aws::DataPipeline::Types::Field] reference field
     def ref(key, val=nil)
       if key.is_a?(Aws::DataPipeline::Types::Field)
         raise ArgumentError unless key.ref_value
@@ -57,12 +72,27 @@ module PipeDsl
       end
     end
 
-    # @return [Aws::DataPipeline::Types::Field]
+    #a new field
+    # @param [String,Aws::DataPipeline::Types::Field] key, or field to add as a field
+    # @param [String] string value. to allow '#{}' in definitions, you can use '%{}' to avoid unintended interpolation
+    # @return [Aws::DataPipeline::Types::Field] string value field
     def field(key, val)
-      Aws::DataPipeline::Types::Field.new(key: key.to_s, string_value: val.to_s)
+      if key.is_a?(Aws::DataPipeline::Types::Field)
+        raise ArgumentError unless key.string_value
+        return key
+      end
+      Aws::DataPipeline::Types::Field.new(key: key.to_s, string_value: unescape_string_value(val.to_s))
     end
 
     private
+
+    #to allow use of '#{}' replacements in the definition output, but not conflict with ruby
+    # interpolation, allow %{} instead
+    # @param [String] input
+    # @param [String] unescaped output
+    def unescape_string_value(str)
+      str.gsub('%{', '#{')
+    end
 
     #turns a hash into a fields array
     # => if the value is a String, number, etc it is treated as a stringvalue

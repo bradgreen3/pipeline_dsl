@@ -7,14 +7,17 @@ module PipeDsl
   # @see Pipeline Def http://docs.aws.amazon.com/datapipeline/latest/DeveloperGuide/dp-pipeline-objects.html
   class Definition < Aws::DataPipeline::Types::PutPipelineDefinitionInput
 
-    #init
-    # @param [String] id pipeline id
-    # @todo  objects?
-    # @yield [self] DSL-style initialization
-    def initialize(id:nil, pipeline_objects: [], parameter_objects: [], parameter_values: [], &block)
-      #todo handle inputs
+    DEFAULT_ID = 'Default'.freeze
 
-      super(pipeline_objects: pipeline_objects, parameter_objects: parameter_objects, parameter_values: parameter_values)
+    #init
+    # @param [Array] pipeline_objects
+    # @param [Array] parameter_objects
+    # @param [Array] parameter_values
+    # @yield [Definition] definition, dsl style
+    def initialize(pipeline_objects: [], parameter_objects: [], parameter_values: [], &block)
+      super(pipeline_objects: pipeline_objects,
+            parameter_objects: parameter_objects,
+            parameter_values: parameter_values)
 
       yield self if block_given?
     end
@@ -34,7 +37,7 @@ module PipeDsl
 
       json.fetch('parameters', []).each do |o|
         id = o.delete('id')
-        # d.parameter_object(id, attributes: o)
+        d.parameter_object(id, attributes: o)
       end
 
       json.fetch('values', []).each do |id, value|
@@ -49,11 +52,13 @@ module PipeDsl
     def as_cli_json
       {
         objects: pipeline_objects.map(&:as_cli_json),
-        #parameters: parameter_objects.map(&:as_cli_json),
+        parameters: parameter_objects.map { |v| v.attributes.merge(id: v.id) },
         values: Hash[parameter_values.map { |v| [v.id, v.string_value] }],
       }
     end
 
+    #generate json string for aws cli tools
+    # @return [String] aws cli json
     def to_cli_json
       JSON.pretty_generate(as_cli_json)
     end
@@ -66,6 +71,16 @@ module PipeDsl
       res ||= parameter_objects.find { |o| o.id == id }
       res ||= parameter_values.find { |o| o.id == id }
       res
+    end
+
+    #add another definition object to this one
+    # @param [Aws::DataPipeline::Types::PutPipelineDefinitionInput] definition to add
+    # @return [self]
+    def concat(d)
+      self.pipeline_objects.concat(d.pipeline_objects)
+      self.parameter_objects.concat(d.parameter_objects)
+      self.parameter_values.concat(d.parameter_values)
+      self
     end
 
     #add a new pipeline object
@@ -83,10 +98,21 @@ module PipeDsl
       end
 
       id ||= "#{type}Object"
+      id = id.to_s
       name ||= id
-      fields[:type] = type
+      fields[:type] = type unless id == DEFAULT_ID #special Default, no type field
 
       pipeline_objects << obj = PipelineObject.new(id: id, name: name, fields: fields, &block)
+      obj
+    end
+
+    def parameter_object(id, attributes: {}, &block)
+      if type.is_a?(Aws::DataPipeline::Types::ParameterObject)
+        parameter_objects << id
+        return id
+      end
+
+      parameter_objects << obj = Aws::DataPipeline::Types::ParameterObject.new(id: id, attributes: attributes)
       obj
     end
 
@@ -101,6 +127,7 @@ module PipeDsl
       end
 
       parameter_values << obj = Aws::DataPipeline::Types::ParameterValue.new(id: id, string_value: string_value)
+      obj
     end
 
   end
