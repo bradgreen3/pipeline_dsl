@@ -7,6 +7,7 @@ module PipeDsl
   class PipelineObject < Aws::DataPipeline::Types::PipelineObject
 
     #init
+    # @todo  take various parameter styles here instead of in definition
     # @param [String] id id for object
     # @param [String] name (default id)
     # @param [Hash,Fields,Array] fields for object

@@ -1,4 +1,5 @@
 require_relative 'pipeline_object'
+require_relative 'parameter_object'
 
 module PipeDsl
 
@@ -15,32 +16,29 @@ module PipeDsl
     # @param [Array] parameter_values
     # @yield [Definition] definition, dsl style
     def initialize(pipeline_objects: [], parameter_objects: [], parameter_values: [], &block)
-      super(pipeline_objects: pipeline_objects,
-            parameter_objects: parameter_objects,
-            parameter_values: parameter_values)
+      #initialize empty
+      super(pipeline_objects: [], parameter_objects: [], parameter_values: [])
 
+      #add initialized objects
+      pipeline_objects.each { |o| self.pipeline_object(o) }
+      parameter_objects.each { |o| self.parameter_object(o) }
+      parameter_values.each { |o| self.parameter_value(o) }
+
+      #yield self for dsl
       yield self if block_given?
     end
 
     #load a definition from a cli json string
+    # @todo should these transforms be generalized
     # @param [String] json
     # @return [Definition] loaded def
     def self.from_cli_json(json)
       json = JSON.parse(json)
       d = self.new
-      json['objects'].each do |o|
-        type = o.delete('type')
-        id = o.delete('id')
-        name = o.delete('name')
-        d.pipeline_object(type, id, name: name, fields: o)
-      end
 
-      json.fetch('parameters', []).each do |o|
-        id = o.delete('id')
-        d.parameter_object(id, attributes: o)
-      end
-
-      json.fetch('values', []).each do |id, value|
+      json['objects'].each { |o| d.pipeline_object(o) }
+      json.fetch('parameters', []).each { |o| d.parameter_object(o) }
+      json.fetch('values', {}).each do |id, value|
         d.parameter_value(id, value)
       end
 
@@ -52,7 +50,7 @@ module PipeDsl
     def as_cli_json
       {
         objects: pipeline_objects.map(&:as_cli_json),
-        parameters: parameter_objects.map { |v| v.attributes.merge(id: v.id) },
+        parameters: parameter_objects.map(&:as_cli_json),
         values: Hash[parameter_values.map { |v| [v.id, v.string_value] }],
       }
     end
@@ -82,37 +80,91 @@ module PipeDsl
       self.parameter_values.concat(d.parameter_values)
       self
     end
+    alias_method :merge!, :concat
 
     #add a new pipeline object
     # one of http://docs.aws.amazon.com/datapipeline/latest/DeveloperGuide/dp-pipeline-objects.html
-    # @param [String,Symbol] type pipeline object type
-    # @param [String,Symbol] id pipeline object id
-    # @param [String,Symbol] name symbolic object name
+    # @todo should this validate the type? look for uniq ids?
+    # @todo should this live on PipelineObject instead?
+    # @param [String] type pipeline object type
+    # @param [String] id pipeline object id
+    # @param [String] name symbolic object name
     # @param [Hash] fields object fields (in standard (json) form)
     # @yield [FieldsContainer] fields container
     # @return [PipelineObject] generated pipeline object
     def pipeline_object(type, id=nil, name:nil, fields:{}, &block)
-      if type.is_a?(Aws::DataPipeline::Types::PipelineObject)
-        pipeline_objects << type
-        return type
+      obj = case type
+      when Aws::DataPipeline::Types::PipelineObject
+        #todo dup/cast to a new PipelineObject
+
+        #merge existing object
+        type.id = id.to_s if id
+        type.name = name.to_s if name
+        type.fields.merge!(fields)
+
+        #todo should this actually call a method on PipelineObject
+        yield type.fields if block_given?
+
+        type
+      when Hash
+        hsh = stringify_keys(type)
+        if hsh['fields']
+          #assume its all mapped as if it was just the params
+          PipelineObject.new(id: hsh['id'], name: hsh['name'], fields: hsh['fields'], &block)
+        else
+          id = hsh.delete('id')
+          name = hsh.delete('name')
+          PipelineObject.new(id: id, name: name, fields: hsh, &block)
+        end
+      when String, Symbol
+        #simple defaults
+        id ||= "#{type}Object"
+        id = id.to_s
+        name ||= id
+        fields[:type] = type unless id == DEFAULT_ID #special Default, no type field
+
+        #new object
+        PipelineObject.new(id: id, name: name, fields: fields, &block)
+      else
+        raise ArgumentError, "type must be string, symbol, hash or object"
       end
 
-      id ||= "#{type}Object"
-      id = id.to_s
-      name ||= id
-      fields[:type] = type unless id == DEFAULT_ID #special Default, no type field
-
-      pipeline_objects << obj = PipelineObject.new(id: id, name: name, fields: fields, &block)
+      pipeline_objects << obj
       obj
     end
 
+    #add a new parameter object
+    # @param [String] id
+    # @param [Hash] attributes hash
+    # @yield [Aws::DataPipeline::Types::ParameterObject] new object dsl style
+    # @return [Aws::DataPipeline::Types::ParameterObject] new object added
     def parameter_object(id, attributes: {}, &block)
-      if type.is_a?(Aws::DataPipeline::Types::ParameterObject)
-        parameter_objects << id
-        return id
+      obj = case id
+      when Aws::DataPipeline::Types::ParameterObject
+        #todo dup/cast to a new ParameterObject
+
+        #merge existing object
+        id.attributes.merge!(attributes)
+        id
+      when Hash
+        hsh = stringify_keys(id)
+        if hsh['attributes']
+          #assume pre-mapped
+          ParameterObject.new(id: hsh['id'], attributes: hsh['attributes'])
+        else
+          id = hsh.delete('id')
+          ParameterObject.new(id: id, attributes: hsh)
+        end
+      when String, Symbol
+        #new object
+        ParameterObject.new(id: id, attributes: attributes)
+      else
+        raise ArgumentError, "id must be string, symbol, hash or object"
       end
 
-      parameter_objects << obj = Aws::DataPipeline::Types::ParameterObject.new(id: id, attributes: attributes)
+      yield obj if block_given?
+
+      parameter_objects << obj
       obj
     end
 
@@ -121,13 +173,34 @@ module PipeDsl
     # @param [String] string_value
     # @return [Aws::DataPipeline::Types::ParameterValue] value object
     def parameter_value(id, string_value=nil)
-      if id.is_a?(Aws::DataPipeline::Types::ParameterValue)
-        parameter_values << id
-        return id
+      obj = case id
+      when Aws::DataPipeline::Types::ParameterValue
+        #merge existing
+        id.string_value = string_value.to_s if string_value
+        id
+      when Hash
+        hsh = stringify_keys(id)
+        #pre-mapped
+        Aws::DataPipeline::Types::ParameterValue.new(id: hsh['id'], string_value: hsh['string_value'])
+      when Array
+        #came from a each'ed hash
+        Aws::DataPipeline::Types::ParameterValue.new(id: id[0], string_value: id[1])
+      when String, Symbol
+        #new
+        Aws::DataPipeline::Types::ParameterValue.new(id: id, string_value: string_value)
+      else
+        raise ArgumentError, "id must be string, symbol, hash or object"
       end
 
-      parameter_values << obj = Aws::DataPipeline::Types::ParameterValue.new(id: id, string_value: string_value)
+      parameter_values << obj
       obj
+    end
+
+    private
+
+    #quick key to-string for hashes
+    def stringify_keys(hsh)
+      Hash[hsh.map { |k,v| [k.to_s, v] }]
     end
 
   end

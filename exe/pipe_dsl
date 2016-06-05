@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 
 require "pipe_dsl"
+require "pipe_dsl/cli"
 
-#todo mimick some of cli 'aws datapipeline'
-#add replacement automation
+PipeDsl::CLI.start(ARGV)

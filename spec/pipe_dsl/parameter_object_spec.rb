@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe PipeDsl::PipelineObject do
+describe PipeDsl::ParameterObject do
   describe '.initialize' do
     it 'creates new'
   end
