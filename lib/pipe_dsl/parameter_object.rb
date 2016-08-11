@@ -1,4 +1,4 @@
-require_relative 'fields'
+require_relative 'util'
 
 module PipeDsl
 
@@ -10,7 +10,25 @@ module PipeDsl
     # @param [String] id for object
     # @param [Hash] attributes
     # @yield [self] dsl style
-    def initialize(id:, attributes:{})
+    def initialize(params, &block)
+      id = nil
+      attributes = {}
+
+      case params
+      when Aws::DataPipeline::Types::ParameterObject
+        #shallow dupe
+        id = params.id
+        attributes = params.attributes
+      when Hash
+        hsh = Util.stringify_keys(params)
+        id = hsh.delete('id')
+        attributes = hsh['attributes'] || hsh
+      when String, Symbol
+        id = params
+      else
+        raise ArgumentError, "id must be string, symbol, hash or object"
+      end
+
       super(id: id, attributes: attributes)
 
       yield self if block_given?

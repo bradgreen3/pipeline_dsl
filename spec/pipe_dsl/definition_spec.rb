@@ -7,12 +7,12 @@ describe PipeDsl::Definition do
     it 'json roundtrip' do
       str = File.read(File.join($SPEC_ROOT,'samples','table_copy.json'));
       parsed = JSON.parse(str)
-      parsed_objects = parsed['objects'].sort_by{ |v| v['id'] }
+      parsed_objects = parsed['objects'].sort_by { |v| v['id'] }
 
       definition = described_class.from_cli_json(str).as_cli_json
       #run through json to stringify keys
       definition = JSON.parse(JSON.dump(definition))
-      objects = definition['objects'].sort_by{ |v| v['id'] }
+      objects = definition['objects'].sort_by { |v| v['id'] }
 
       expect(parsed_objects).to match_array(objects)
     end
@@ -28,7 +28,7 @@ describe PipeDsl::Definition do
           { 'id' => 'second' }
         ],
         parameter_values: [
-          { 'id' => 'third', 'string_value' => 'third' }
+          { 'id' => 'third', 'string_value' => 'third value' }
         ]
       ) do |dsl|
         expect(dsl).to be_a(described_class)
@@ -40,6 +40,7 @@ describe PipeDsl::Definition do
       expect(dsl.parameter_objects.first.id).to eq 'second'
       expect(dsl.parameter_values.size).to eq 1
       expect(dsl.parameter_values.first.id).to eq 'third'
+      expect(dsl.parameter_values.first.string_value).to eq 'third value'
     end
   end
 

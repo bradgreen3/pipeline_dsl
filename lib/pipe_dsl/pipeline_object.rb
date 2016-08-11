@@ -1,4 +1,5 @@
 require_relative 'fields'
+require_relative 'util'
 
 module PipeDsl
 
@@ -6,13 +7,38 @@ module PipeDsl
   # @see AWS SDK http://docs.aws.amazon.com/sdkforruby/api/Aws/DataPipeline/Types/PipelineObject.html
   class PipelineObject < Aws::DataPipeline::Types::PipelineObject
 
+    DEFAULT_ID = 'Default'.freeze
+
     #init
-    # @todo  take various parameter styles here instead of in definition
     # @param [String] id id for object
     # @param [String] name (default id)
     # @param [Hash,Fields,Array] fields for object
     # @yield [Fields] dsl style fields
-    def initialize(id:, name:nil, fields:{}, &block)
+    def initialize(params={}, &block)
+      id = nil
+      name = nil
+      fields = {}
+
+      case params
+      when Aws::DataPipeline::Types::PipelineObject
+        #shallow dup/cast
+        id = params.id
+        name = params.name.to_s if name
+        fields = params.fields
+      when Hash
+        hsh = Util.stringify_keys(params)
+        id = hsh.delete('id')
+        name = hsh.delete('name')
+        fields = hsh['fields'] || hsh
+      when String, Symbol
+        #simple defaults
+        id ||= "#{params}Object"
+        id = id.to_s
+        fields[:type] = params unless params == DEFAULT_ID #special Default, no type field
+      else
+        raise ArgumentError, "type must be string, symbol, hash or object"
+      end
+      raise ArugmentError, 'id must be specified' unless id
       name ||= id
 
       super(id: id, name: name, fields: Fields.new(fields, &block))
