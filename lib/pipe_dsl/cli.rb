@@ -1,13 +1,19 @@
 require 'thor'
+require_relative '../pipe_dsl'
 
 module PipeDsl
   class CLI < Thor
-    class_option :verbose, :type => :boolean
 
-    desc "this is a test", "test it"
-    def test
-      puts "test"
-      d = PipeDsl.definition
+  #   class_option :verbose, :type => :boolean
+
+    desc "version", "Get the version"
+    def version
+      puts "#{self.class.to_s} #{VERSION}"
+    end
+
+    desc "convert FILE", 'Convert a file'
+    def convert(fn)
+
     end
 
   end

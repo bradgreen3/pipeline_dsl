@@ -43,6 +43,7 @@ module PipeDsl
       yield self if block_given?
       self
     end
+    alias_method :merge, :concat
 
     # field as a reference
     # @todo this might need to be in a better spot?
@@ -55,7 +56,7 @@ module PipeDsl
         return key
       end
 
-      case val
+      obj = case val
       when Hash
         raise ArgumentError unless val['ref']
         Aws::DataPipeline::Types::Field.new(key: key.to_s, ref_value: val['ref'].to_s)
@@ -70,6 +71,9 @@ module PipeDsl
       else
         raise ArgumentError
       end
+
+      self << obj
+      obj
     end
 
     #a new field
@@ -81,8 +85,20 @@ module PipeDsl
         raise ArgumentError unless key.string_value
         return key
       end
-      Aws::DataPipeline::Types::Field.new(key: key.to_s, string_value: unescape_string_value(val.to_s))
+      val_ary = Util.array_wrap(val)
+      obj = nil
+      val_ary.map do |v|
+        self << obj = Aws::DataPipeline::Types::Field.new(key: key.to_s, string_value: unescape_string_value(v.to_s))
+        obj
+      end
+
+      if val.is_a?(Array)
+        val_ary
+      else
+        obj
+      end
     end
+    alias_method :[]=, :field
 
     private
 
@@ -104,21 +120,17 @@ module PipeDsl
     def from_hash(hash)
       hash.each_with_object([]) do |(key, val), ary|
         case val
-        when Array
-          val.each do |v|
-            ary << field(key, v)
-          end
         when Aws::DataPipeline::Types::Field
           val.key = key.to_s
           ary << val
         when Aws::DataPipeline::Types::PipelineObject, Symbol, Hash
-          ary << ref(key, val)
+          ref(key, val)
         when TrueClass
-          ary << field(key, 'true')
+          field(key, 'true')
         when FalseClass
-          ary << field(key, 'false')
+          field(key, 'false')
         else
-          ary << field(key, val)
+          field(key, val)
         end
       end
     end

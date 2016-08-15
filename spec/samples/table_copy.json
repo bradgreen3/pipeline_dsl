@@ -2,50 +2,53 @@
   "objects": [
     {
       "name": "load_schedule",
-      "id": "ScheduleId_Qc7ip",
+      "id": "ScheduleObject",
       "startAt": "FIRST_ACTIVATION_DATE_TIME",
       "period": "2 Hours",
       "type": "Schedule"
     },
     {
+      "name": "Default",
+      "id": "Default",
+      "failureAndRerunMode": "CASCADE",
+      "scheduleType": "cron",
+      "role": "DataPipelineDefaultRole",
+      "resourceRole": "DataPipelineDefaultResourceRole",
+      "pipelineLogUri": "s3://sample-logs/data_pipeline_logs/sample/",
+      "schedule": { "ref": "ScheduleObject" },
+      "onFail": { "ref": "FailureAlarm" }
+    },
+    {
+      "name": "Failure Alarm",
+      "id": "FailureAlarm",
+      "message": "There was a problem executing #{node.name} at for period #{node.@scheduledStartTime} to #{node.@scheduledEndTime}",
+      "subject": "RDS to Redshift copy failed",
+      "topicArn": "arn:aws:sns:us-east-1:id:redshift-debug",
+      "type": "SnsAlarm"
+    },
+    {
       "name": "RDS Dump Resource",
       "id": "RDSDumpEc2Resource",
       "terminateAfter": "4 Hours",
-      "schedule": {
-        "ref": "ScheduleId_Qc7ip"
-      },
-      "onFail": {
-        "ref": "SnsAlarmId218"
-      },
       "securityGroups": "sample_data_pipeline",
       "maximumRetries": "1",
       "maxActiveInstances": "1",
-      "role": "DataPipelineDefaultRole",
       "logUri": "s3://sample-logs/data_pipeline_logs/sample/#{type}/#{name}",
-      "type": "Ec2Resource",
-      "resourceRole": "DataPipelineDefaultResourceRole"
+      "type": "Ec2Resource"
     },
     {
       "name": "Redshift Load Resource",
       "id": "RedshiftLoadEc2Resource",
       "terminateAfter": "4 Hours",
-      "schedule": {
-        "ref": "ScheduleId_Qc7ip"
-      },
-      "onFail": {
-        "ref": "SnsAlarmId218"
-      },
       "securityGroups": "sample_data_pipeline",
       "maximumRetries": "1",
       "maxActiveInstances": "1",
       "logUri": "s3://sample-logs/data_pipeline_logs/sample/#{type}/#{name}",
-      "role": "DataPipelineDefaultRole",
-      "resourceRole": "DataPipelineDefaultResourceRole",
       "type": "Ec2Resource"
     },
     {
       "name": "Redshift",
-      "id": "RedshiftDatabaseId_RsqsB",
+      "id": "RedshiftDatabaseObject",
       "databaseName": "sample",
       "username": "user",
       "*password": "pass",
@@ -55,7 +58,7 @@
     },
     {
       "name": "Mysql",
-      "id": "MysqlDatabaseId_RsqsB",
+      "id": "MysqlDatabaseObject",
       "databaseName": "sample",
       "username": "user",
       "*password": "pass",
@@ -68,39 +71,10 @@
       "id": "DataFormatId_Iz13M",
       "type": "CSV"
     },
-    {
-      "name": "Success Notice",
-      "id": "ActionId3",
-      "message": "Data Pipeline: Global RDS to S3 succeeded for node #{node.name} at for period #{node.@scheduledStartTime} to #{node.@scheduledEndTime}",
-      "subject": "Global Reporting to Redshift load succeeded",
-      "topicArn": "arn:aws:sns:us-east-1:id:redshift-export-complete",
-      "type": "SnsAlarm"
-    },
-    {
-      "name": "Failure Alarm",
-      "id": "SnsAlarmId218",
-      "message": "There was a problem executing #{node.name} at for period #{node.@scheduledStartTime} to #{node.@scheduledEndTime}",
-      "subject": "RDS to Redshift copy failed",
-      "role": "DataPipelineDefaultRole",
-      "topicArn": "arn:aws:sns:us-east-1:id:redshift-debug",
-      "type": "SnsAlarm"
-    },
-    {
-      "name": "Default",
-      "id": "Default",
-      "failureAndRerunMode": "CASCADE",
-      "scheduleType": "cron",
-      "role": "DataPipelineDefaultRole",
-      "resourceRole": "DataPipelineDefaultResourceRole",
-      "pipelineLogUri": "s3://sample-logs/data_pipeline_logs/sample/"
-    },
 
     {
       "name": "RDS: table_one",
       "id": "table_oneMySqlDataNode",
-      "schedule": {
-        "ref": "ScheduleId_Qc7ip"
-      },
       "table": "table_one",
       "selectQuery": "select id,name,left(notes,500),created_at,updated_at from #{table} where updated_at > '#{format(minusHours(@scheduledStartTime,48),'YYYY-MM-dd hh:mm:ss')}'",
       "type": "MySqlDataNode",
@@ -114,15 +88,9 @@
       "input": {
         "ref": "table_oneMySqlDataNode"
       },
-      "schedule": {
-        "ref": "ScheduleId_Qc7ip"
-      },
       "maximumRetries": "1",
       "runsOn": {
         "ref": "RDSDumpEc2Resource"
-      },
-      "onFail": {
-        "ref": "SnsAlarmId218"
       },
       "output": {
         "ref": "table_one3DataNode"
@@ -132,9 +100,6 @@
     {
       "name": "S3: table_one",
       "id": "table_one3DataNode",
-      "schedule": {
-        "ref": "ScheduleId_Qc7ip"
-      },
       "filePath": "s3://sample-logs/data_pipeline_output/table_one/#{@scheduledStartTime}.csv.gz",
       "dataFormat": {
         "ref": "DataFormatId_Iz13M"
@@ -148,19 +113,10 @@
       "input": {
         "ref": "table_one3DataNode"
       },
-      "schedule": {
-        "ref": "ScheduleId_Qc7ip"
-      },
       "insertMode": "OVERWRITE_EXISTING",
       "maximumRetries": "1",
       "runsOn": {
         "ref": "RedshiftLoadEc2Resource"
-      },
-      "onFail": {
-        "ref": "SnsAlarmId218"
-      },
-      "onSuccess": {
-        "ref": "ActionId3"
       },
       "output": {
         "ref": "table_oneRedshiftDataNode"
@@ -170,9 +126,6 @@
     {
       "name": "Redshift: table_one",
       "id": "table_oneRedshiftDataNode",
-      "schedule": {
-        "ref": "ScheduleId_Qc7ip"
-      },
       "tableName": "table_one",
       "type": "RedshiftDataNode",
       "database": {
@@ -183,9 +136,6 @@
     {
       "name": "RDS: table_two",
       "id": "table_twoMySqlDataNode",
-      "schedule": {
-        "ref": "ScheduleId_Qc7ip"
-      },
       "table": "table_two",
       "selectQuery": "select * from #{table} where updated_at > '#{format(minusHours(@scheduledStartTime,48),'YYYY-MM-dd hh:mm:ss')}'",
       "type": "MySqlDataNode",
@@ -199,15 +149,9 @@
       "input": {
         "ref": "table_twoMySqlDataNode"
       },
-      "schedule": {
-        "ref": "ScheduleId_Qc7ip"
-      },
       "maximumRetries": "1",
       "runsOn": {
         "ref": "RDSDumpEc2Resource"
-      },
-      "onFail": {
-        "ref": "SnsAlarmId218"
       },
       "dependsOn": {
         "ref": "table_oneToS3CopyActivity"
@@ -220,9 +164,6 @@
     {
       "name": "S3: table_two",
       "id": "table_two3DataNode",
-      "schedule": {
-        "ref": "ScheduleId_Qc7ip"
-      },
       "filePath": "s3://sample-logs/data_pipeline_output/table_two/#{@scheduledStartTime}.csv.gz",
       "dataFormat": {
         "ref": "DataFormatId_Iz13M"
@@ -236,19 +177,10 @@
       "input": {
         "ref": "table_two3DataNode"
       },
-      "schedule": {
-        "ref": "ScheduleId_Qc7ip"
-      },
       "insertMode": "OVERWRITE_EXISTING",
       "maximumRetries": "1",
       "runsOn": {
         "ref": "RedshiftLoadEc2Resource"
-      },
-      "onFail": {
-        "ref": "SnsAlarmId218"
-      },
-      "onSuccess": {
-        "ref": "ActionId3"
       },
       "output": {
         "ref": "table_twoRedshiftDataNode"
@@ -258,9 +190,6 @@
     {
       "name": "Redshift: table_two",
       "id": "table_twoRedshiftDataNode",
-      "schedule": {
-        "ref": "ScheduleId_Qc7ip"
-      },
       "tableName": "table_two",
       "type": "RedshiftDataNode",
       "database": {
@@ -271,9 +200,6 @@
     {
       "name": "RDS: table_three",
       "id": "table_threeMySqlDataNode",
-      "schedule": {
-        "ref": "ScheduleId_Qc7ip"
-      },
       "table": "table_three",
       "selectQuery": "select * from #{table} where updated_at > '#{format(minusHours(@scheduledStartTime,48),'YYYY-MM-dd hh:mm:ss')}'",
       "type": "MySqlDataNode",
@@ -287,15 +213,9 @@
       "input": {
         "ref": "table_threeMySqlDataNode"
       },
-      "schedule": {
-        "ref": "ScheduleId_Qc7ip"
-      },
       "maximumRetries": "1",
       "runsOn": {
         "ref": "RDSDumpEc2Resource"
-      },
-      "onFail": {
-        "ref": "SnsAlarmId218"
       },
       "dependsOn": {
         "ref": "table_twoToS3CopyActivity"
@@ -308,9 +228,6 @@
     {
       "name": "S3: table_three",
       "id": "table_three3DataNode",
-      "schedule": {
-        "ref": "ScheduleId_Qc7ip"
-      },
       "filePath": "s3://sample-logs/data_pipeline_output/table_three/#{@scheduledStartTime}.csv.gz",
       "dataFormat": {
         "ref": "DataFormatId_Iz13M"
@@ -324,19 +241,10 @@
       "input": {
         "ref": "table_three3DataNode"
       },
-      "schedule": {
-        "ref": "ScheduleId_Qc7ip"
-      },
       "insertMode": "OVERWRITE_EXISTING",
       "maximumRetries": "1",
       "runsOn": {
         "ref": "RedshiftLoadEc2Resource"
-      },
-      "onFail": {
-        "ref": "SnsAlarmId218"
-      },
-      "onSuccess": {
-        "ref": "ActionId3"
       },
       "output": {
         "ref": "table_threeRedshiftDataNode"
@@ -346,9 +254,6 @@
     {
       "name": "Redshift: table_three",
       "id": "table_threeRedshiftDataNode",
-      "schedule": {
-        "ref": "ScheduleId_Qc7ip"
-      },
       "tableName": "table_three",
       "type": "RedshiftDataNode",
       "database": {
