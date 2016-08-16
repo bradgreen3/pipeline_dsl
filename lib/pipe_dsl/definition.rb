@@ -81,6 +81,33 @@ module PipeDsl
     end
     alias_method :merge!, :concat
 
+    #add a definition object, return a new copy
+    # @param [Aws::DataPipeline::Types::PutPipelineDefinitionInput] definition to add
+    # @return [Definition]
+    def merge(d)
+      out = self.dup
+      out.concat(d)
+      out
+    end
+    alias_method :+, :merge
+
+    #add an object
+    # @param [Aws::DataPipeline::Types::*] object
+    def <<(other)
+      case other
+      when Aws::DataPipeline::Types::PutPipelineDefinitionInput
+        concat(other)
+      when Aws::DataPipeline::Types::PipelineObject
+        self.pipeline_objects << other
+      when Aws::DataPipeline::Types::ParameterObject
+        self.parameter_objects << other
+      when Aws::DataPipeline::Types::ParameterValue
+        self.parameter_values << other
+      else
+        raise ArgumentError
+      end
+    end
+
     #add a new pipeline object
     # one of http://docs.aws.amazon.com/datapipeline/latest/DeveloperGuide/dp-pipeline-objects.html
     # @todo should this validate the type? look for uniq ids?

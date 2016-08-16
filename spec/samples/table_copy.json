@@ -68,7 +68,7 @@
     },
     {
       "name": "csv_data_format",
-      "id": "DataFormatId_Iz13M",
+      "id": "DataFormat",
       "type": "CSV"
     },
 

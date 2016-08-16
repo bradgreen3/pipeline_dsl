@@ -1,8 +1,10 @@
 module PipeDsl
   module Util
+
     def self.stringify_keys(hsh)
       Hash[hsh.map { |k,v| [k.to_s, v] }]
     end
+
     def self.array_wrap(object)
       if object.nil?
         []
@@ -12,5 +14,6 @@ module PipeDsl
         [object]
       end
     end
+
   end
 end

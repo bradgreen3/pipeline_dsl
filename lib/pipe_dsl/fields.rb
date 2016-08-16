@@ -43,10 +43,10 @@ module PipeDsl
       yield self if block_given?
       self
     end
-    alias_method :merge, :concat
+    alias_method :merge!, :concat
 
     # field as a reference
-    # @todo this might need to be in a better spot?
+    # @todo should this just merge into field?
     # @param [String,Aws::DataPipeline::Types::Field] key, or field to add as a ref
     # @param [Hash,String,Aws::DataPipeline::Types::Field,Aws::DataPipeline::Types::PipelineObject] reference to add as a ref
     # @return [Aws::DataPipeline::Types::Field] reference field
@@ -85,10 +85,19 @@ module PipeDsl
         raise ArgumentError unless key.string_value
         return key
       end
+
       val_ary = Util.array_wrap(val)
       obj = nil
+
       val_ary.map do |v|
-        self << obj = Aws::DataPipeline::Types::Field.new(key: key.to_s, string_value: unescape_string_value(v.to_s))
+        case v
+        when Aws::DataPipeline::Types::PipelineObject, Hash
+          #use ref instead
+          ref(key, v)
+        else
+          #add as a regular field
+          self << obj = Aws::DataPipeline::Types::Field.new(key: key.to_s, string_value: unescape_string_value(v.to_s))
+        end
         obj
       end
 
