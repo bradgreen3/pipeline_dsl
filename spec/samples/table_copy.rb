@@ -51,8 +51,8 @@ dfn = PipeDsl.definition do |dfn|
   end
 
   dfn.pipeline_object('Default') do |d|
-    d.ref('onFail', failure)
-    d.ref(:schedule, sch)
+    d.field('onFail', failure)
+    d.field(:schedule, sch)
     d.concat({
                "failureAndRerunMode" => "CASCADE",
                "scheduleType" => "cron",

@@ -21,12 +21,12 @@ Gem::Specification.new do |spec|
   spec.require_paths = ["lib"]
 
   spec.add_dependency 'aws-sdk-resources', '~> 2'
-  spec.add_dependency 'json'
-  spec.add_dependency 'thor'
+  spec.add_dependency 'json', '~> 1.8'
+  spec.add_dependency 'thor', '~> 0.19'
 
-  spec.add_development_dependency "bundler", "~> 1.12"
-  spec.add_development_dependency "rake", "~> 10.0"
-  spec.add_development_dependency "rspec", "~> 3.0"
+  spec.add_development_dependency "bundler"
+  spec.add_development_dependency "rake"
+  spec.add_development_dependency "rspec"
 
   #explode pry-plus into pieces
   spec.add_development_dependency 'bond'
@@ -38,5 +38,9 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency 'pry-rescue'
   spec.add_development_dependency 'awesome_print'
   #end explode pry-plus
+
+  #try out pipely
+  spec.add_development_dependency "pipely"
+  spec.add_development_dependency "activesupport", '< 5'
 
 end

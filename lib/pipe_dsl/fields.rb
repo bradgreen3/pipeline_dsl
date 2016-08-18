@@ -45,44 +45,14 @@ module PipeDsl
     end
     alias_method :merge!, :concat
 
-    # field as a reference
-    # @todo should this just merge into field?
-    # @param [String,Aws::DataPipeline::Types::Field] key, or field to add as a ref
-    # @param [Hash,String,Aws::DataPipeline::Types::Field,Aws::DataPipeline::Types::PipelineObject] reference to add as a ref
-    # @return [Aws::DataPipeline::Types::Field] reference field
-    def ref(key, val=nil)
-      if key.is_a?(Aws::DataPipeline::Types::Field)
-        raise ArgumentError unless key.ref_value
-        return key
-      end
-
-      obj = case val
-      when Hash
-        raise ArgumentError unless val['ref']
-        Aws::DataPipeline::Types::Field.new(key: key.to_s, ref_value: val['ref'].to_s)
-      when String, Symbol
-        Aws::DataPipeline::Types::Field.new(key: key.to_s, ref_value: val.to_s)
-      when Aws::DataPipeline::Types::Field
-        raise ArgumentError unless val.ref_value
-        val.key = key.to_s
-        val
-      when Aws::DataPipeline::Types::PipelineObject
-        Aws::DataPipeline::Types::Field.new(key: key.to_s, ref_value: val.id.to_s)
-      else
-        raise ArgumentError
-      end
-
-      self << obj
-      obj
-    end
-
     #a new field
     # @param [String,Aws::DataPipeline::Types::Field] key, or field to add as a field
-    # @param [String] string value. to allow '#{}' in definitions, you can use '%{}' to avoid unintended interpolation
+    # @param [String,Hash,PipelineObject] string value. to allow '#{}' in definitions, you can use '%{}' to avoid unintended interpolation
     # @return [Aws::DataPipeline::Types::Field] string value field
     def field(key, val)
       if key.is_a?(Aws::DataPipeline::Types::Field)
-        raise ArgumentError unless key.string_value
+        raise ArgumentError unless key.string_value or key.ref_value
+        self << key
         return key
       end
 
@@ -90,13 +60,17 @@ module PipeDsl
       obj = nil
 
       val_ary.map do |v|
-        case v
-        when Aws::DataPipeline::Types::PipelineObject, Hash
-          #use ref instead
-          ref(key, v)
+        self << obj = case v
+        when Aws::DataPipeline::Types::PipelineObject
+          #add as a ref
+          Aws::DataPipeline::Types::Field.new(key: key.to_s, ref_value: v.id.to_s)
+        when Hash
+          raise ArgumentError unless val['ref']
+          Aws::DataPipeline::Types::Field.new(key: key.to_s, ref_value: val['ref'].to_s)
+          #todo symbol, treat as ref?
         else
           #add as a regular field
-          self << obj = Aws::DataPipeline::Types::Field.new(key: key.to_s, string_value: unescape_string_value(v.to_s))
+          Aws::DataPipeline::Types::Field.new(key: key.to_s, string_value: unescape_string_value(v.to_s))
         end
         obj
       end
@@ -132,8 +106,6 @@ module PipeDsl
         when Aws::DataPipeline::Types::Field
           val.key = key.to_s
           ary << val
-        when Aws::DataPipeline::Types::PipelineObject, Symbol, Hash
-          ref(key, val)
         when TrueClass
           field(key, 'true')
         when FalseClass
