@@ -1,0 +1,44 @@
+inherit_from: .rubocop_todo.yml
+AllCops:
+  Include:
+    - Rakefile
+  Exclude:
+    - '*.gemspec'
+
+Metrics/LineLength:
+  Enabled: false
+# Cop supports --auto-correct.
+# Configuration parameters: EnforcedStyle, SupportedStyles.
+# SupportedStyles: empty_lines, no_empty_lines
+Style/EmptyLinesAroundBlockBody:
+  Enabled: false
+# Cop supports --auto-correct.
+# Configuration parameters: EnforcedStyle, SupportedStyles.
+# SupportedStyles: empty_lines, no_empty_lines
+Style/EmptyLinesAroundClassBody:
+  Enabled: false
+# Cop supports --auto-correct.
+# Configuration parameters: EnforcedStyle, SupportedStyles.
+# SupportedStyles: empty_lines, no_empty_lines
+Style/EmptyLinesAroundModuleBody:
+  Enabled: false
+Style/Documentation:
+  Exclude:
+    - 'spec/**/*'
+    - 'test/**/*'
+# Cop supports --auto-correct.
+Style/LeadingCommentSpace:
+  Enabled: false
+# Cop supports --auto-correct.
+Style/RedundantSelf:
+  Enabled: false
+# Cop supports --auto-correct.
+# Configuration parameters: EnforcedStyle, SupportedStyles, ConsistentQuotesInMultiline.
+# SupportedStyles: single_quotes, double_quotes
+Style/StringLiterals:
+  Enabled: false
+# Cop supports --auto-correct.
+# Configuration parameters: EnforcedStyleForMultiline, SupportedStyles.
+# SupportedStyles: comma, consistent_comma, no_comma
+Style/TrailingCommaInLiteral:
+  Enabled: false

@@ -14,7 +14,7 @@ module PipeDsl
     # @param [Array] parameter_objects
     # @param [Array] parameter_values
     # @yield [Definition] definition, dsl style
-    def initialize(pipeline_objects: [], parameter_objects: [], parameter_values: [], &block)
+    def initialize(pipeline_objects: [], parameter_objects: [], parameter_values: [])
       #initialize empty
       super(pipeline_objects: [], parameter_objects: [], parameter_values: [])
 
@@ -118,7 +118,7 @@ module PipeDsl
     # @param [Hash] fields object fields (in standard (json) form)
     # @yield [FieldsContainer] fields container
     # @return [PipelineObject] generated pipeline object
-    def pipeline_object(params={}, &block)
+    def pipeline_object(params = {}, &block)
       pipeline_objects << obj = PipelineObject.new(params, &block)
       obj
     end

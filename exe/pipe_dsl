@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 
-require "pipe_dsl"
-require "pipe_dsl/cli"
+require 'pipe_dsl'
+require 'pipe_dsl/cli/base'
 
-PipeDsl::CLI.start(ARGV)
+PipeDsl::CLI::Base.start(ARGV.dup)

@@ -14,7 +14,7 @@ module PipeDsl
     # @param [String] name (default id)
     # @param [Hash,Fields,Array] fields for object
     # @yield [Fields] dsl style fields
-    def initialize(params={}, &block)
+    def initialize(params = {}, &block)
       id = nil
       name = nil
       fields = {}

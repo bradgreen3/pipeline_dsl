@@ -5,7 +5,7 @@ describe PipeDsl::Definition do
 
   describe 'integration' do
     it 'json roundtrip' do
-      str = File.read(File.join($SPEC_ROOT,'samples','table_copy.json'));
+      str = File.read(File.join($SPEC_ROOT, 'samples', 'table_copy.json'))
       parsed = JSON.parse(str)
       parsed_objects = parsed['objects'].sort_by { |v| v['id'] }
 

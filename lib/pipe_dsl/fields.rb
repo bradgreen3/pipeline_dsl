@@ -6,7 +6,7 @@ module PipeDsl
     #new fields list
     # @param [Array,Hash] (optional) field list to init with
     # @yield [self] dsl style
-    def initialize(fields=nil, &block)
+    def initialize(fields = nil, &block)
       super()
       concat(fields, &block)
     end
@@ -16,9 +16,9 @@ module PipeDsl
     def as_cli_json
       self.each_with_object({}) do |f, hsh|
         if !f.ref_value.nil?
-          hsh[f.key] = {ref: f.ref_value}
+          hsh[f.key] = { ref: f.ref_value }
         elsif hsh[f.key]
-          hsh[f.key] = [hsh[f.key]] if !hsh[f.key].is_a?(Array)
+          hsh[f.key] = [hsh[f.key]] unless hsh[f.key].is_a?(Array)
           hsh[f.key] << f.string_value
         else
           hsh[f.key] = f.string_value
@@ -30,7 +30,7 @@ module PipeDsl
     # @param [Hash,Array] fields to add
     # @yield [self] dsl style
     # @return [self]
-    def concat(fields=nil)
+    def concat(fields = nil)
       case fields
       when Hash
         super(from_hash(fields))
@@ -39,7 +39,7 @@ module PipeDsl
       else
         super
       end
-      #todo can't decide if this makes more sense as instance_eval
+      #TODO: can't decide if this makes more sense as instance_eval
       yield self if block_given?
       self
     end
@@ -51,7 +51,7 @@ module PipeDsl
     # @return [Aws::DataPipeline::Types::Field] string value field
     def field(key, val)
       if key.is_a?(Aws::DataPipeline::Types::Field)
-        raise ArgumentError unless key.string_value or key.ref_value
+        raise ArgumentError unless key.string_value || key.ref_value
         self << key
         return key
       end
@@ -67,7 +67,7 @@ module PipeDsl
         when Hash
           raise ArgumentError unless val['ref']
           Aws::DataPipeline::Types::Field.new(key: key.to_s, ref_value: val['ref'].to_s)
-          #todo symbol, treat as ref?
+          #TODO: symbol, treat as ref?
         else
           #add as a regular field
           Aws::DataPipeline::Types::Field.new(key: key.to_s, string_value: unescape_string_value(v.to_s))

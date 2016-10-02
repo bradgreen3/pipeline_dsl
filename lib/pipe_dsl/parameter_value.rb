@@ -10,7 +10,7 @@ module PipeDsl
     # @param [String] id for object
     # @param [String] string_value for value
     # @yield [self] dsl style
-    def initialize(*params, &block)
+    def initialize(*params)
       id = nil
       string_value = nil
 
