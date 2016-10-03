@@ -1,0 +1,17 @@
+{
+	"folders":
+	[
+		{
+			"file_exclude_patterns":
+			[
+				".editorconfig",
+				"pipe_dsl.sublime-project"
+			],
+			"folder_exclude_patterns":
+			[
+				".yardoc"
+			],
+			"path": "."
+		}
+	]
+}
