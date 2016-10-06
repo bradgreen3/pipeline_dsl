@@ -1,11 +1,19 @@
 {
   "objects": [
     {
-      "name": "load_schedule",
+      "name": "ScheduleObject",
       "id": "ScheduleObject",
       "startAt": "FIRST_ACTIVATION_DATE_TIME",
       "period": "2 Hours",
       "type": "Schedule"
+    },
+    {
+      "name": "FailureAlarm",
+      "id": "FailureAlarm",
+      "message": "There was a problem executing #{node.name} at for period #{node.@scheduledStartTime} to #{node.@scheduledEndTime}",
+      "subject": "RDS to Redshift copy failed",
+      "topicArn": "arn:aws:sns:us-east-1:id:redshift-debug",
+      "type": "SnsAlarm"
     },
     {
       "name": "Default",
@@ -19,15 +27,7 @@
       "onFail": { "ref": "FailureAlarm" }
     },
     {
-      "name": "Failure Alarm",
-      "id": "FailureAlarm",
-      "message": "There was a problem executing #{node.name} at for period #{node.@scheduledStartTime} to #{node.@scheduledEndTime}",
-      "subject": "RDS to Redshift copy failed",
-      "topicArn": "arn:aws:sns:us-east-1:id:redshift-debug",
-      "type": "SnsAlarm"
-    },
-    {
-      "name": "RDS Dump Resource",
+      "name": "RDSDumpEc2Resource",
       "id": "RDSDumpEc2Resource",
       "terminateAfter": "4 Hours",
       "securityGroups": "sample_data_pipeline",
@@ -37,7 +37,7 @@
       "type": "Ec2Resource"
     },
     {
-      "name": "Redshift Load Resource",
+      "name": "RedshiftLoadEc2Resource",
       "id": "RedshiftLoadEc2Resource",
       "terminateAfter": "4 Hours",
       "securityGroups": "sample_data_pipeline",
@@ -47,7 +47,7 @@
       "type": "Ec2Resource"
     },
     {
-      "name": "Redshift",
+      "name": "RedshiftDatabaseObject",
       "id": "RedshiftDatabaseObject",
       "databaseName": "sample",
       "username": "user",
@@ -57,7 +57,7 @@
       "type": "RedshiftDatabase"
     },
     {
-      "name": "Mysql",
+      "name": "RdsDatabaseObject",
       "id": "MysqlDatabaseObject",
       "databaseName": "sample",
       "username": "user",
@@ -67,15 +67,15 @@
       "jdbcProperties": ["zeroDateTimeBehavior=convertToNull", "connectTimeout=0", "socketTimeout=0"]
     },
     {
-      "name": "csv_data_format",
+      "name": "DataFormat",
       "id": "DataFormat",
       "type": "CSV"
     },
 
     {
-      "name": "RDS: table_one",
-      "id": "table_oneMySqlDataNode",
-      "table": "table_one",
+      "name": "RDS: first",
+      "id": "firstMySqlDataNodeObject",
+      "table": "first",
       "selectQuery": "select id,name,left(notes,500),created_at,updated_at from #{table} where updated_at > '#{format(minusHours(@scheduledStartTime,48),'YYYY-MM-dd hh:mm:ss')}'",
       "type": "MySqlDataNode",
       "database": {
@@ -83,24 +83,24 @@
       }
     },
     {
-      "name": "table_one to S3",
-      "id": "table_oneToS3CopyActivity",
+      "name": "first to S3",
+      "id": "firstRdsToS3CopyActivity",
       "input": {
-        "ref": "table_oneMySqlDataNode"
+        "ref": "firstMySqlDataNodeObject"
       },
       "maximumRetries": "1",
       "runsOn": {
         "ref": "RDSDumpEc2Resource"
       },
       "output": {
-        "ref": "table_one3DataNode"
+        "ref": "firstS3DataNodeObject"
       },
       "type": "CopyActivity"
     },
     {
-      "name": "S3: table_one",
-      "id": "table_one3DataNode",
-      "filePath": "s3://sample-logs/data_pipeline_output/table_one/#{@scheduledStartTime}.csv.gz",
+      "name": "S3: first",
+      "id": "firstS3DataNodeObject",
+      "filePath": "s3://sample-logs/data_pipeline_output/first/#{@scheduledStartTime}.csv.gz",
       "dataFormat": {
         "ref": "DataFormatId_Iz13M"
       },
@@ -108,10 +108,10 @@
       "type": "S3DataNode"
     },
     {
-      "name": "S3 to Redshift: table_one",
-      "id": "table_oneToRedshiftCopyActivity",
+      "name": "S3 to Redshift: first",
+      "id": "firstS3ToRedshiftCopyActivity",
       "input": {
-        "ref": "table_one3DataNode"
+        "ref": "firstS3DataNodeObject"
       },
       "insertMode": "OVERWRITE_EXISTING",
       "maximumRetries": "1",
@@ -119,14 +119,14 @@
         "ref": "RedshiftLoadEc2Resource"
       },
       "output": {
-        "ref": "table_oneRedshiftDataNode"
+        "ref": "firstRedshiftDataNodeObject"
       },
       "type": "RedshiftCopyActivity"
     },
     {
-      "name": "Redshift: table_one",
-      "id": "table_oneRedshiftDataNode",
-      "tableName": "table_one",
+      "name": "Redshift: first",
+      "id": "firstRedshiftDataNodeObject",
+      "tableName": "first",
       "type": "RedshiftDataNode",
       "database": {
         "ref": "RedshiftDatabaseId_RsqsB"
@@ -134,9 +134,9 @@
     },
 
     {
-      "name": "RDS: table_two",
-      "id": "table_twoMySqlDataNode",
-      "table": "table_two",
+      "name": "RDS: second",
+      "id": "secondMySqlDataNodeObject",
+      "table": "second",
       "selectQuery": "select * from #{table} where updated_at > '#{format(minusHours(@scheduledStartTime,48),'YYYY-MM-dd hh:mm:ss')}'",
       "type": "MySqlDataNode",
       "database": {
@@ -144,27 +144,27 @@
       }
     },
     {
-      "name": "table_two to S3",
-      "id": "table_twoToS3CopyActivity",
+      "name": "second to S3",
+      "id": "secondRdsToS3CopyActivity",
       "input": {
-        "ref": "table_twoMySqlDataNode"
+        "ref": "secondMySqlDataNodeObject"
       },
       "maximumRetries": "1",
       "runsOn": {
         "ref": "RDSDumpEc2Resource"
       },
       "dependsOn": {
-        "ref": "table_oneToS3CopyActivity"
+        "ref": "firstRdsToS3CopyActivity"
       },
       "output": {
-        "ref": "table_two3DataNode"
+        "ref": "secondS3DataNodeObject"
       },
       "type": "CopyActivity"
     },
     {
-      "name": "S3: table_two",
-      "id": "table_two3DataNode",
-      "filePath": "s3://sample-logs/data_pipeline_output/table_two/#{@scheduledStartTime}.csv.gz",
+      "name": "S3: second",
+      "id": "secondS3DataNodeObject",
+      "filePath": "s3://sample-logs/data_pipeline_output/second/#{@scheduledStartTime}.csv.gz",
       "dataFormat": {
         "ref": "DataFormatId_Iz13M"
       },
@@ -172,10 +172,10 @@
       "type": "S3DataNode"
     },
     {
-      "name": "S3 to Redshift: table_two",
-      "id": "table_twoToRedshiftCopyActivity",
+      "name": "S3 to Redshift: second",
+      "id": "secondS3ToRedshiftCopyActivity",
       "input": {
-        "ref": "table_two3DataNode"
+        "ref": "secondS3DataNodeObject"
       },
       "insertMode": "OVERWRITE_EXISTING",
       "maximumRetries": "1",
@@ -183,14 +183,14 @@
         "ref": "RedshiftLoadEc2Resource"
       },
       "output": {
-        "ref": "table_twoRedshiftDataNode"
+        "ref": "secondRedshiftDataNodeObject"
       },
       "type": "RedshiftCopyActivity"
     },
     {
-      "name": "Redshift: table_two",
-      "id": "table_twoRedshiftDataNode",
-      "tableName": "table_two",
+      "name": "Redshift: second",
+      "id": "secondRedshiftDataNodeObject",
+      "tableName": "second",
       "type": "RedshiftDataNode",
       "database": {
         "ref": "RedshiftDatabaseId_RsqsB"
@@ -198,9 +198,9 @@
     },
 
     {
-      "name": "RDS: table_three",
-      "id": "table_threeMySqlDataNode",
-      "table": "table_three",
+      "name": "RDS: three",
+      "id": "threeMySqlDataNodeObject",
+      "table": "three",
       "selectQuery": "select * from #{table} where updated_at > '#{format(minusHours(@scheduledStartTime,48),'YYYY-MM-dd hh:mm:ss')}'",
       "type": "MySqlDataNode",
       "database": {
@@ -208,27 +208,27 @@
       }
     },
     {
-      "name": "table_three to S3",
-      "id": "table_threeToS3CopyActivity",
+      "name": "three to S3",
+      "id": "threeRdsToS3CopyActivity",
       "input": {
-        "ref": "table_threeMySqlDataNode"
+        "ref": "threeMySqlDataNodeObject"
       },
       "maximumRetries": "1",
       "runsOn": {
         "ref": "RDSDumpEc2Resource"
       },
       "dependsOn": {
-        "ref": "table_twoToS3CopyActivity"
+        "ref": "secondRdsToS3CopyActivity"
       },
       "output": {
-        "ref": "table_three3DataNode"
+        "ref": "threeS3DataNodeObject"
       },
       "type": "CopyActivity"
     },
     {
-      "name": "S3: table_three",
-      "id": "table_three3DataNode",
-      "filePath": "s3://sample-logs/data_pipeline_output/table_three/#{@scheduledStartTime}.csv.gz",
+      "name": "S3: three",
+      "id": "threeS3DataNodeObject",
+      "filePath": "s3://sample-logs/data_pipeline_output/three/#{@scheduledStartTime}.csv.gz",
       "dataFormat": {
         "ref": "DataFormatId_Iz13M"
       },
@@ -236,10 +236,10 @@
       "type": "S3DataNode"
     },
     {
-      "name": "S3 to Redshift: table_three",
-      "id": "table_threeToRedshiftCopyActivity",
+      "name": "S3 to Redshift: three",
+      "id": "threeS3ToRedshiftCopyActivity",
       "input": {
-        "ref": "table_three3DataNode"
+        "ref": "threeS3DataNodeObject"
       },
       "insertMode": "OVERWRITE_EXISTING",
       "maximumRetries": "1",
@@ -247,14 +247,14 @@
         "ref": "RedshiftLoadEc2Resource"
       },
       "output": {
-        "ref": "table_threeRedshiftDataNode"
+        "ref": "threeRedshiftDataNodeObject"
       },
       "type": "RedshiftCopyActivity"
     },
     {
-      "name": "Redshift: table_three",
-      "id": "table_threeRedshiftDataNode",
-      "tableName": "table_three",
+      "name": "Redshift: three",
+      "id": "threeRedshiftDataNodeObject",
+      "tableName": "three",
       "type": "RedshiftDataNode",
       "database": {
         "ref": "RedshiftDatabaseId_RsqsB"

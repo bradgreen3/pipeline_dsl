@@ -31,10 +31,14 @@ module PipeDsl
         name = hsh.delete('name')
         fields = hsh['fields'] || hsh
       when String, Symbol
-        #simple defaults
-        id ||= "#{params}Object"
-        id = id.to_s
-        fields[:type] = params unless params == DEFAULT_ID #special Default, no type field
+        if params == DEFAULT_ID #special Default, no type field
+          name = id = DEFAULT_ID
+        else
+          #simple defaults
+          id ||= "#{params}Object"
+          id = id.to_s
+          fields[:type] = params
+        end
       else
         raise ArgumentError, "type must be string, symbol, hash or object"
       end
@@ -50,8 +54,8 @@ module PipeDsl
       #cast fields in the case we dont have our fields
       self.fields = Fields.new(self.fields) unless self.fields.is_a?(Fields)
       self.fields.as_cli_json.merge({
-        id: id,
-        name: name
+                                      id: id,
+                                      name: name
       })
     end
 

@@ -23,6 +23,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency 'aws-sdk-resources', '~> 2'
   spec.add_dependency 'json', '~> 1.8'
   spec.add_dependency 'thor', '~> 0.19'
+  spec.add_dependency 'cleanroom', '~> 1.0'
 
   spec.add_development_dependency "bundler"
   spec.add_development_dependency "rake"
@@ -39,8 +40,8 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency 'awesome_print'
   #end explode pry-plus
 
-  #try out pipely
-  spec.add_development_dependency "pipely"
-  spec.add_development_dependency "activesupport", '< 5'
+  # #try out pipely
+  # spec.add_development_dependency "pipely"
+  # spec.add_development_dependency "activesupport", '< 5'
 
 end

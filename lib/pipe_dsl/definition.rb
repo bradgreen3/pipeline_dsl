@@ -1,6 +1,7 @@
 require_relative 'pipeline_object'
 require_relative 'parameter_object'
 require_relative 'parameter_value'
+require 'cleanroom'
 
 module PipeDsl
 
@@ -8,6 +9,8 @@ module PipeDsl
   # @see AWS SDK http://docs.aws.amazon.com/sdkforruby/api/Aws/DataPipeline/Types/PipelineObject.html
   # @see Pipeline Def http://docs.aws.amazon.com/datapipeline/latest/DeveloperGuide/dp-pipeline-objects.html
   class Definition < Aws::DataPipeline::Types::PutPipelineDefinitionInput
+
+    include Cleanroom
 
     #init
     # @param [Array] pipeline_objects
@@ -28,20 +31,24 @@ module PipeDsl
     end
 
     #load a definition from a cli json string
-    # @todo should these transforms be generalized
     # @param [String] json
     # @return [Definition] loaded def
     def self.from_cli_json(json)
       json = JSON.parse(json)
-      d = self.new
+      from_cli_hash(json)
+    end
 
-      json['objects'].each { |o| d.pipeline_object(o) }
-      json.fetch('parameters', []).each { |o| d.parameter_object(o) }
-      json.fetch('values', {}).each do |id, value|
-        d.parameter_value(id, value)
+    #load a definition from a hash (cli json format)
+    # @param [Hash] input hash
+    # @return [Definition] loaded def
+    def self.from_cli_hash(hsh)
+      self.new.tap do |d|
+        hsh['objects'].each { |o| d.pipeline_object(o) }
+        hsh.fetch('parameters', []).each { |o| d.parameter_object(o) }
+        hsh.fetch('values', {}).each do |id, value|
+          d.parameter_value(id, value)
+        end
       end
-
-      d
     end
 
     #turn the definition into the hash for json usable by the aws cli
@@ -80,6 +87,8 @@ module PipeDsl
       self
     end
     alias_method :merge!, :concat
+    expose :concat
+    expose :merge!
 
     #add a definition object, return a new copy
     # @param [Aws::DataPipeline::Types::PutPipelineDefinitionInput] definition to add
@@ -107,6 +116,7 @@ module PipeDsl
         raise ArgumentError
       end
     end
+    expose :<<
 
     #add a new pipeline object
     # one of http://docs.aws.amazon.com/datapipeline/latest/DeveloperGuide/dp-pipeline-objects.html
@@ -122,6 +132,7 @@ module PipeDsl
       pipeline_objects << obj = PipelineObject.new(params, &block)
       obj
     end
+    expose :pipeline_object
 
     #add a new parameter object
     # @param [String] id
@@ -132,6 +143,7 @@ module PipeDsl
       parameter_objects << obj = ParameterObject.new(params, &block)
       obj
     end
+    expose :parameter_object
 
     #add a new parameter value
     # @param [String] id
@@ -141,6 +153,7 @@ module PipeDsl
       parameter_values << obj = ParameterValue.new(*params, &block)
       obj
     end
+    expose :parameter_value
 
   end
 end

@@ -2,8 +2,9 @@ module PipeDsl
   module CLI
     # AWS api methods
     class Api < Thor
+
       desc 'create NAME', 'Create this pipeline in AWS'
-      option :unique_id, 'Custom unique ID for pipeline'
+      option :unique_id, desc: 'Custom unique ID for pipeline'
       def create(name)
         unique_id = options[:unique_id] || "#{name}_#{Time.now.strftime('%Y%m%d%H%M%S')}"
 
@@ -23,10 +24,10 @@ module PipeDsl
       end
 
       desc 'upload DEFINITION', 'Upload the pipeline definition to AWS'
-      option :pipeline_id, 'Pipeline ID'
-      option :name, 'Pipeline name (finds ID automatically)'
-      def upload(definition = nil)
-        definition = parse_definition(definition)
+      option :pipeline_id, desc: 'Pipeline ID'
+      option :name, desc: 'Pipeline name (finds ID automatically)'
+      def upload(file)
+        definition = CLI.parse_file(file)
         pipeline_id = options[:pipeline_id] || find_pipeline_id(options[:name])
         raise Thor::Error, "A Pipeline ID is required" unless pipeline_id
 
@@ -48,8 +49,8 @@ module PipeDsl
       end
 
       desc 'activate', 'Activate the pipeline in AWS'
-      option :pipeline_id, 'Pipeline ID'
-      option :name, 'Pipeline name (finds ID automatically)'
+      option :pipeline_id, desc: 'Pipeline ID'
+      option :name, desc: 'Pipeline name (finds ID automatically)'
       def activate
         pipeline_id = options[:pipeline_id] || find_pipeline_id(options[:name])
         raise Thor::Error, "A Pipeline ID is required" unless pipeline_id
@@ -59,8 +60,8 @@ module PipeDsl
       end
 
       desc 'delete', 'Delete the pipeline in AWS'
-      option :pipeline_id, 'Pipeline ID'
-      option :name, 'Pipeline name (finds ID automatically)'
+      option :pipeline_id, desc: 'Pipeline ID'
+      option :name, desc: 'Pipeline name (finds ID automatically)'
       def delete
         pipeline_id = options[:pipeline_id] || find_pipeline_id(options[:name])
         raise Thor::Error, "A Pipeline ID is required" unless pipeline_id
@@ -70,12 +71,12 @@ module PipeDsl
       end
 
       desc 'execute NAME DEFINITION', 'Execute (create, upload and activate) a definition'
-      def replace(name, definition = nil)
+      def execute(name, file)
         options[:pipeline_id] = find_pipeline_id(name)
         delete if options[:pipeline_id]
 
         options[:pipeline_id] = create(name)
-        upload(definition)
+        upload(file)
         activate
       end
 
@@ -90,13 +91,6 @@ module PipeDsl
       def find_pipeline_id(name)
         pipe = client.list_pipelines.pipeline_id_list.find { |i| i.name == name }
         pipe.id if pipe
-      end
-
-      #parse a given pipeline definition
-      def parse_definition(definition)
-        return definition if definition.is_a?(Aws::DataPipeline::Types::PutPipelineDefinitionInput)
-
-        #TODO: things
       end
 
     end

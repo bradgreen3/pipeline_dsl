@@ -1,6 +1,8 @@
 require_relative '../cli'
-require_relative 'api'
 require 'thor/version'
+
+#load subcommands
+Dir["#{File.dirname(__FILE__)}/*.rb"].each { |f| require f }
 
 module PipeDsl
   module CLI
@@ -10,6 +12,9 @@ module PipeDsl
 
       desc 'api SUBCOMMAND ...ARGS', 'AWS api commands'
       subcommand 'api', Api
+
+      desc 'parser SUBCOMMAND ...ARGS', 'parser commands'
+      subcommand 'parser', Parser
 
       desc 'version', 'Get the version'
       def version
