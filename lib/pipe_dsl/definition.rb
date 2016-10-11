@@ -10,6 +10,7 @@ module PipeDsl
   # @see Pipeline Def http://docs.aws.amazon.com/datapipeline/latest/DeveloperGuide/dp-pipeline-objects.html
   class Definition < Aws::DataPipeline::Types::PutPipelineDefinitionInput
 
+    #cleanroom provides the wrapper for the DSL input
     include Cleanroom
 
     #init
@@ -27,7 +28,7 @@ module PipeDsl
       parameter_values.each { |o| self.parameter_value(o) }
 
       #yield self for dsl
-      yield self if block_given?
+      define(&Proc.new) if block_given?
     end
 
     #load a definition from a cli json string
@@ -76,6 +77,14 @@ module PipeDsl
       res ||= parameter_values.find { |o| o.id == id }
       res
     end
+
+    #dsl definition
+    # @yield [Definition] self
+    def define
+      yield self
+      self
+    end
+    expose :define
 
     #add another definition object to this one
     # @param [Aws::DataPipeline::Types::PutPipelineDefinitionInput] definition to add
@@ -155,5 +164,25 @@ module PipeDsl
     end
     expose :parameter_value
 
+    #add a component (prebuilt struct of objects)
+    # @param [String|Symbol] name of component
+    # @param [Various] parameters
+    # @yield [ComponentDefinition] definition block
+    def component(name, **parameters, &block)
+      class_name = "PipeDsl::" << Util.demodulize(Util.camelize(name))
+      klass = if Util.descendants(self.class).map(&:name).include?(class_name)
+        self.class.const_get(class_name)
+      else
+        raise ArgumentError, 'Name is not a component'
+      end
+
+      concat(obj = klass.new(**parameters, &block))
+      obj
+    end
+    expose :component
+
   end
 end
+
+#todo lazy load?
+Dir["#{File.dirname(__FILE__)}/component_definition/*.rb"].each { |f| require f }

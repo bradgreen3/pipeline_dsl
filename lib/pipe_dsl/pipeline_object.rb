@@ -53,10 +53,7 @@ module PipeDsl
     def as_cli_json
       #cast fields in the case we dont have our fields
       self.fields = Fields.new(self.fields) unless self.fields.is_a?(Fields)
-      self.fields.as_cli_json.merge({
-                                      id: id,
-                                      name: name
-      })
+      self.fields.as_cli_json.merge(id: id, name: name)
     end
 
   end

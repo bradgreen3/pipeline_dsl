@@ -24,8 +24,8 @@ module PipeDsl
         string_value = params.string_value
       when Hash
         hsh = Util.stringify_keys(params)
-        id = params.delete('id')
-        string_value = params.delete('string_value')
+        id = hsh.delete('id')
+        string_value = hsh.delete('string_value')
       when Array
         #came from a each'ed hash
         id = id[0]

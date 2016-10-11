@@ -1,3 +1,5 @@
+require_relative 'util'
+
 module PipeDsl
 
   #wrap an array of PipelineObject fields
@@ -67,11 +69,12 @@ module PipeDsl
         when Hash
           raise ArgumentError unless val['ref']
           Aws::DataPipeline::Types::Field.new(key: key.to_s, ref_value: val['ref'].to_s)
-          #TODO: symbol, treat as ref?
+        #TODO: symbol, treat as ref?
         else
           #add as a regular field
-          Aws::DataPipeline::Types::Field.new(key: key.to_s, string_value: unescape_string_value(v.to_s))
+          Aws::DataPipeline::Types::Field.new(key: key.to_s, string_value: Util.unescape_string_value(v.to_s))
         end
+
         obj
       end
 
@@ -84,14 +87,6 @@ module PipeDsl
     alias_method :[]=, :field
 
     private
-
-    #to allow use of '#{}' replacements in the definition output, but not conflict with ruby
-    # interpolation, allow %{} instead
-    # @param [String] input
-    # @param [String] unescaped output
-    def unescape_string_value(str)
-      str.gsub('%{', '#{')
-    end
 
     #turns a hash into a fields array
     # => if the value is a String, number, etc it is treated as a stringvalue

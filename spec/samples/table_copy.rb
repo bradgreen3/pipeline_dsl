@@ -1,44 +1,3 @@
-def rds_to_redshift(rds_db:, rds_runner:, redshift_db:, redshift_runner:, table:, data_format:,s3_base_path:, select_query:nil, rds_depends_on:nil, redshift_depends_on:nil)
-
-  rds_copy = nil
-  redshift_copy = nil
-
-  dfn = PipeDsl.definition do |dfn|
-    s3 = dfn.pipeline_object(type: "S3DataNode", id: "#{table}S3DataNodeObject") do |s|
-      s['filePath'] = "#{s3_base_path}/#{table}/%{@scheduledStartTime}.csv.gz"
-      s['dataFormat'] = data_format
-      s['compression'] = 'GZIP'
-    end
-    rds_table = dfn.pipeline_object(type: "MySqlDataNode", id: "#{table}MySqlDataNodeObject") do |m|
-      m['database'] = rds_db
-      m['table'] = table
-      m['selectQuery'] = select_query || "SELECT * from %{table} where updated_at > '%{format(minusHours(@scheduledStartTime,48),'YYYY-MM-dd hh:mm:ss')}'"
-    end
-    redshift_table = dfn.pipeline_object(type: "RedshiftDataNode", id: "#{table}RedshiftDataNodeObject") do |r|
-      r['database'] = redshift_db
-      r['tableName'] = table
-    end
-
-    rds_copy = dfn.pipeline_object(type: "CopyActivity", id: "#{table}RdsToS3CopyActivity") do |c|
-      c['runsOn'] = rds_runner
-      c['maximumRetries'] = 1
-      c['input'] = rds_table
-      c['output'] = s3
-      c['dependsOn'] = rds_depends_on if rds_depends_on
-    end
-    redshift_copy = dfn.pipeline_object(type: "RedshiftCopyActivity", id: "#{table}S3ToRedshiftCopyActivity") do |c|
-      c['runsOn'] = redshift_runner
-      c['maximumRetries'] = 1
-      c['input'] = s3
-      c['output'] = redshift_table
-      c['dependsOn'] = redshift_depends_on if redshift_depends_on
-    end
-  end
-
-  [dfn, rds_copy, redshift_copy]
-end
-
-
 sch = pipeline_object('Schedule') do |s|
   s['startAt'] = 'FIRST_ACTIVATION_DATE_TIME'
   s['period'] = '2 Hours'
@@ -92,35 +51,27 @@ end
 
 dataf = pipeline_object(id: "DataFormat", type: "CSV")
 
-first_dfn, first_rds, first_redshift = rds_to_redshift(
+first_table = component(:mysql_redshift_copy,
+  table_name: 'first',
   rds_db: rds_db,
   rds_runner: dump_ec2,
   redshift_db: redshift_db,
   redshift_runner: load_ec2,
-  table: 'first',
   data_format: dataf,
   s3_base_path: "s3://sample-data/output/"
 )
-concat(first_dfn)
-second_dfn, second_rds, second_redshift = rds_to_redshift(
-  rds_db: rds_db,
-  rds_runner: dump_ec2,
-  redshift_db: redshift_db,
-  redshift_runner: load_ec2,
-  table: 'second',
-  data_format: dataf,
-  s3_base_path: "s3://sample-data/output/",
-  rds_depends_on: first_rds
-)
-concat(second_dfn)
-third_dfn, third_rds, third_redshift = rds_to_redshift(
-  rds_db: rds_db,
-  rds_runner: dump_ec2,
-  redshift_db: redshift_db,
-  redshift_runner: load_ec2,
-  table: 'three',
-  data_format: dataf,
-  s3_base_path: "s3://sample-data/output/",
-  rds_depends_on: second_rds
-)
-concat(third_dfn)
+concat(first_table)
+
+second_table = component(:mysql_redshift_copy,
+  table_name: 'second',
+  depends_on: first_table,
+  rds_depends_on: true
+  )
+concat(second_table)
+
+third_table = component(:mysql_redshift_copy,
+  table_name: 'three',
+  depends_on: second_table,
+  rds_depends_on: true
+  )
+concat(third_table)

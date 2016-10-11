@@ -1,3 +1,4 @@
+require_relative 'attributes'
 require_relative 'util'
 
 module PipeDsl
@@ -10,7 +11,7 @@ module PipeDsl
     # @param [String] id for object
     # @param [Hash] attributes
     # @yield [self] dsl style
-    def initialize(params)
+    def initialize(params, &block)
       id = nil
       attributes = {}
 
@@ -29,15 +30,15 @@ module PipeDsl
         raise ArgumentError, "id must be string, symbol, hash or object"
       end
 
-      super(id: id, attributes: attributes)
-
-      yield self if block_given?
+      super(id: id, attributes: Attributes.new(attributes, &block))
     end
 
     #serialization for aws cli
     # @return [Hash] aws cli format
     def as_cli_json
-      self.attributes.merge(id: self.id)
+      #cast fields in the case we dont have our fields
+      self.attributes = Attributes.new(self.attributes) unless self.attributes.is_a?(Attributes)
+      self.attributes.as_cli_json.merge(id: id)
     end
 
   end

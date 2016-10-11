@@ -39,10 +39,10 @@ module PipeDsl
           parameter_values: definition.parameter_values
         )
 
-        begin
-          raise Thor::Error, "Put fail: #{result}" if result.errored
-        rescue
-          raise Thor::Error, "Could not parse output"
+        if result && result.errored
+          validation_result_error(result)
+        elsif result && !result.validation_warnings.empty?
+          validation_result_warnings(result)
         end
 
         result
@@ -70,14 +70,42 @@ module PipeDsl
         client.delete_pipeline(pipeline_id: pipeline_id)
       end
 
+      desc 'validate DEFINITION', 'Validate a definition file'
+      option :pipeline_id, desc: 'Pipeline ID'
+      def validate(file)
+        definition = CLI.parse_file(file)
+
+        pipeline_id = options[:pipeline_id] || find_pipeline_id(options[:name])
+        raise Thor::Error, "A Pipeline ID is required" unless pipeline_id
+
+        puts "validating definition on #{pipeline_id}" if options[:verbose]
+        result = client.validate_pipeline_definition(
+          pipeline_id: pipeline_id,
+          pipeline_objects: definition.pipeline_objects,
+          parameter_objects: definition.parameter_objects,
+          parameter_values: definition.parameter_values
+        )
+
+        if result && result.errored
+          validation_result_error(result)
+        elsif result && !result.validation_warnings.empty?
+          validation_result_warnings(result)
+        else
+          puts "Validation passed"
+        end
+
+        result
+      end
+
       desc 'execute NAME DEFINITION', 'Execute (create, upload and activate) a definition'
+      option :activate, type: :boolean, desc: 'Activate after upload', default: true
       def execute(name, file)
         options[:pipeline_id] = find_pipeline_id(name)
         delete if options[:pipeline_id]
 
-        options[:pipeline_id] = create(name)
+        options[:pipeline_id] = create(name).pipeline_id
         upload(file)
-        activate
+        activate if options[:activate]
       end
 
       private
@@ -91,6 +119,30 @@ module PipeDsl
       def find_pipeline_id(name)
         pipe = client.list_pipelines.pipeline_id_list.find { |i| i.name == name }
         pipe.id if pipe
+      end
+
+      #print out a error result
+      def validation_result_error(result)
+        error_string = ''
+        result.validation_errors.each do |o|
+          error_string << "\t * #{o.id}:\n"
+          o.errors.each do |e|
+            error_string << "\t\t * #{e}\n"
+          end
+        end
+        raise Thor::Error, "Validation Failure:\n#{error_string}"
+      end
+
+      #warnings output from pipeline result
+      def validation_result_warnings(result)
+        error_string = "Warnings:\n"
+        result.validation_warnings.each do |o|
+          error_string << "\t * #{o.id}:\n"
+          o.errors.each do |e|
+            error_string << "\t\t * #{e}\n"
+          end
+        end
+        puts error_string
       end
 
     end

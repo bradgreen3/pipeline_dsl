@@ -30,8 +30,8 @@ describe PipeDsl::Definition do
         parameter_values: [
           { 'id' => 'third', 'string_value' => 'third value' }
         ]
-      ) do |dsl|
-        expect(dsl).to be_a(described_class)
+      ) do |d|
+        expect(d).to be_a(described_class)
       end
 
       expect(dsl.pipeline_objects.size).to eq 1
