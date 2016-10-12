@@ -64,6 +64,9 @@ describe PipeDsl::Definition do
     it 'merges a definition'
   end
 
+  describe '.add' do
+  end
+
   describe '.pipeline_object' do
     it 'adds a new object'
     it 'adds a new hash'
@@ -80,6 +83,15 @@ describe PipeDsl::Definition do
     it 'adds a new object'
     it 'adds a new hash'
     it 'adds a new params'
+  end
+
+  describe '.component' do
+
+  end
+
+  describe '.find' do
+  end
+  describe '.define' do
   end
 
 end

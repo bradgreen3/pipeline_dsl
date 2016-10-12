@@ -3,6 +3,7 @@ require_relative 'util'
 module PipeDsl
 
   #wrap an array of ParameterObject attributes
+  # similar, but mostly different, to Fields
   class Attributes < Array
 
     #new attributes list
@@ -32,13 +33,17 @@ module PipeDsl
     # @return [self]
     def concat(attributes = nil)
       case attributes
-      when Hash
-        super(from_hash(attributes))
       when NilClass
         #noop
-      else
+      when Hash
+        super(from_hash(attributes))
+      when Array
+        raise ArgumentError, "All entries must be ParameterAttribute" unless attributes.all? { |a| a.is_a?(Aws::DataPipeline::Types::ParameterAttribute) }
         super
+      else
+        raise ArgumentError, "Must be a Hash, or Array of ParameterAttribute"
       end
+
       #TODO: can't decide if this makes more sense as instance_eval
       yield self if block_given?
       self
@@ -49,7 +54,7 @@ module PipeDsl
     # @param [String,Aws::DataPipeline::Types::ParameterAttribute] key, or attribute to add as a attribute
     # @param [String] string value. to allow '#{}' in definitions, you can use '%{}' to avoid unintended interpolation
     # @return [Aws::DataPipeline::Types::ParameterAttribute] string value
-    def attribute(key, val)
+    def attribute(key, val = nil)
       if key.is_a?(Aws::DataPipeline::Types::ParameterAttribute)
         raise ArgumentError unless key.string_value
         self << key
@@ -60,6 +65,7 @@ module PipeDsl
       obj = nil
 
       val_ary.map do |v|
+        raise ArgumentError, 'unknown value type' unless [String, Numeric, Symbol].any? { |k| v.is_a?(k) }
         self << obj = Aws::DataPipeline::Types::ParameterAttribute.new(key: key.to_s, string_value: Util.unescape_string_value(v.to_s))
         obj
       end

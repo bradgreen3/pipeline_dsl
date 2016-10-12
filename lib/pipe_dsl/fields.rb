@@ -3,6 +3,7 @@ require_relative 'util'
 module PipeDsl
 
   #wrap an array of PipelineObject fields
+  # similar, but mostly different, to Attributes
   class Fields < Array
 
     #new fields list
@@ -34,13 +35,17 @@ module PipeDsl
     # @return [self]
     def concat(fields = nil)
       case fields
-      when Hash
-        super(from_hash(fields))
       when NilClass
         #noop
-      else
+      when Hash
+        super(from_hash(fields))
+      when Array
+        raise ArgumentError, "All entries must be Field" unless fields.all? { |a| a.is_a?(Aws::DataPipeline::Types::Field) }
         super
+      else
+        raise ArgumentError, "Must be a Hash, or Array of Field"
       end
+
       #TODO: can't decide if this makes more sense as instance_eval
       yield self if block_given?
       self
@@ -51,12 +56,13 @@ module PipeDsl
     # @param [String,Aws::DataPipeline::Types::Field] key, or field to add as a field
     # @param [String,Hash,PipelineObject] string value. to allow '#{}' in definitions, you can use '%{}' to avoid unintended interpolation
     # @return [Aws::DataPipeline::Types::Field] string value field
-    def field(key, val)
+    def field(key, val = nil)
       if key.is_a?(Aws::DataPipeline::Types::Field)
         raise ArgumentError unless key.string_value || key.ref_value
         self << key
         return key
       end
+      raise ArgumentError, 'value must exist' if val.nil?
 
       val_ary = Util.array_wrap(val)
       obj = nil
@@ -67,12 +73,15 @@ module PipeDsl
           #add as a ref
           Aws::DataPipeline::Types::Field.new(key: key.to_s, ref_value: v.id.to_s)
         when Hash
+          val = Util.stringify_keys(val)
           raise ArgumentError unless val['ref']
           Aws::DataPipeline::Types::Field.new(key: key.to_s, ref_value: val['ref'].to_s)
         #TODO: symbol, treat as ref?
-        else
+        when String, Numeric, Symbol
           #add as a regular field
           Aws::DataPipeline::Types::Field.new(key: key.to_s, string_value: Util.unescape_string_value(v.to_s))
+        else
+          raise ArgumentError, 'unknown value type'
         end
 
         obj

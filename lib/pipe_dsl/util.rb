@@ -1,6 +1,6 @@
 module PipeDsl
 
-  #generic utilities
+  #generic utilities, mostly cribbed from ActiveSupport
   module Util
 
     #convert hash keys to strings
@@ -47,7 +47,7 @@ module PipeDsl
     # @return [String] inflected string
     def self.demodulize(path)
       path = path.to_s
-      if i = path.rindex('::')
+      if (i = path.rindex('::'))
         path[(i + 2)..-1]
       else
         path

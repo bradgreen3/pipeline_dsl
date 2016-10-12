@@ -125,7 +125,9 @@ module PipeDsl
         raise ArgumentError
       end
     end
+    alias_method :add, :<<
     expose :<<
+    expose :add
 
     #add a new pipeline object
     # one of http://docs.aws.amazon.com/datapipeline/latest/DeveloperGuide/dp-pipeline-objects.html
@@ -184,5 +186,5 @@ module PipeDsl
   end
 end
 
-#todo lazy load?
+#TODO: lazy load?
 Dir["#{File.dirname(__FILE__)}/component_definition/*.rb"].each { |f| require f }

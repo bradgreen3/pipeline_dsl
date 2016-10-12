@@ -21,6 +21,7 @@ module PipeDsl
         puts "#{self.class} #{VERSION}"
         puts "ruby: #{RUBY_VERSION} thor: #{Thor::VERSION}" if options[:verbose]
       end
+
     end
   end
 end

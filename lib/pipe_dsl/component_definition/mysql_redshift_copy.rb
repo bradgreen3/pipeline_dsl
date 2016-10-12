@@ -10,6 +10,8 @@ module PipeDsl
     # @param [String] table_name
     def initialize(table_name:, depends_on: nil, rds_db: nil, rds_runner: nil, redshift_db: nil, redshift_runner: nil, data_format: nil, s3_base_path: nil, select_query: nil, rds_depends_on: nil, redshift_depends_on: nil, retries: nil, &block)
 
+      raise ArgumentError, "depends_on must be a #{self.class}" if depends_on && !depends_on.is_a?(self.class)
+
       # use or copy all the parameters
       @rds_db = rds_db || (depends_on && depends_on.rds_db)
       @rds_runner = rds_runner || (depends_on && depends_on.rds_runner)
