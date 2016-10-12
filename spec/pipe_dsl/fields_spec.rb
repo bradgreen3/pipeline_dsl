@@ -1,5 +1,5 @@
 require 'spec_helper'
-require 'pipe_dsl/parameter_object'
+require 'pipe_dsl/type/parameter_object'
 
 describe PipeDsl::Fields do
   describe '.initialize' do

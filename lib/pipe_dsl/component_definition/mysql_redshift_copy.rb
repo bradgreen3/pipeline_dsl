@@ -1,6 +1,7 @@
+require_relative '../component_definition'
 module PipeDsl
   #common components for datapipeline
-  class MysqlRedshiftCopy < Definition
+  class MysqlRedshiftCopy < ComponentDefinition
 
     attr_accessor :table_name, :data_format, :s3_base_path, :select_query, :retries
     attr_accessor :rds_db, :rds_runner, :rds_depends_on, :rds_copy

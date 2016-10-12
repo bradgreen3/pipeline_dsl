@@ -1,6 +1,5 @@
-require_relative 'pipeline_object'
-require_relative 'parameter_object'
-require_relative 'parameter_value'
+require_relative 'definition/base_types'
+require_relative 'definition/serialization'
 require 'cleanroom'
 
 module PipeDsl
@@ -12,6 +11,8 @@ module PipeDsl
 
     #cleanroom provides the wrapper for the DSL input
     include Cleanroom
+    include BaseTypes
+    include Serialization
 
     #init
     # @param [Array] pipeline_objects
@@ -29,43 +30,6 @@ module PipeDsl
 
       #yield self for dsl
       define(&Proc.new) if block_given?
-    end
-
-    #load a definition from a cli json string
-    # @param [String] json
-    # @return [Definition] loaded def
-    def self.from_cli_json(json)
-      json = JSON.parse(json)
-      from_cli_hash(json)
-    end
-
-    #load a definition from a hash (cli json format)
-    # @param [Hash] input hash
-    # @return [Definition] loaded def
-    def self.from_cli_hash(hsh)
-      self.new.tap do |d|
-        hsh['objects'].each { |o| d.pipeline_object(o) }
-        hsh.fetch('parameters', []).each { |o| d.parameter_object(o) }
-        hsh.fetch('values', {}).each do |id, value|
-          d.parameter_value(id, value)
-        end
-      end
-    end
-
-    #turn the definition into the hash for json usable by the aws cli
-    # @return [Hash] hash for json encoding
-    def as_cli_json
-      {
-        objects: pipeline_objects.map(&:as_cli_json),
-        parameters: parameter_objects.map(&:as_cli_json),
-        values: Hash[parameter_values.map(&:as_cli_json)],
-      }
-    end
-
-    #generate json string for aws cli tools
-    # @return [String] aws cli json
-    def to_cli_json
-      JSON.pretty_generate(as_cli_json)
     end
 
     #find id in list of objects
@@ -129,56 +93,12 @@ module PipeDsl
     expose :<<
     expose :add
 
-    #add a new pipeline object
-    # one of http://docs.aws.amazon.com/datapipeline/latest/DeveloperGuide/dp-pipeline-objects.html
-    # @todo should this validate the type? look for uniq ids?
-    # @todo should this live on PipelineObject instead?
-    # @param [String] type pipeline object type
-    # @param [String] id pipeline object id
-    # @param [String] name symbolic object name
-    # @param [Hash] fields object fields (in standard (json) form)
-    # @yield [FieldsContainer] fields container
-    # @return [PipelineObject] generated pipeline object
-    def pipeline_object(params = {}, &block)
-      pipeline_objects << obj = PipelineObject.new(params, &block)
-      obj
-    end
-    expose :pipeline_object
-
-    #add a new parameter object
-    # @param [String] id
-    # @param [Hash] attributes hash
-    # @yield [Aws::DataPipeline::Types::ParameterObject] new object dsl style
-    # @return [Aws::DataPipeline::Types::ParameterObject] new object added
-    def parameter_object(params, &block)
-      parameter_objects << obj = ParameterObject.new(params, &block)
-      obj
-    end
-    expose :parameter_object
-
-    #add a new parameter value
-    # @param [String] id
-    # @param [String] string_value
-    # @return [Aws::DataPipeline::Types::ParameterValue] value object
-    def parameter_value(*params, &block)
-      parameter_values << obj = ParameterValue.new(*params, &block)
-      obj
-    end
-    expose :parameter_value
-
     #add a component (prebuilt struct of objects)
     # @param [String|Symbol] name of component
     # @param [Various] parameters
     # @yield [ComponentDefinition] definition block
     def component(name, **parameters, &block)
-      class_name = "PipeDsl::" << Util.demodulize(Util.camelize(name))
-      klass = if Util.descendants(self.class).map(&:name).include?(class_name)
-        self.class.const_get(class_name)
-      else
-        raise ArgumentError, 'Name is not a component'
-      end
-
-      concat(obj = klass.new(**parameters, &block))
+      concat(obj = ComponentDefinition.factory(name).new(**parameters, &block))
       obj
     end
     expose :component
@@ -186,5 +106,5 @@ module PipeDsl
   end
 end
 
-#TODO: lazy load?
-Dir["#{File.dirname(__FILE__)}/component_definition/*.rb"].each { |f| require f }
+#TODO: how to lazy-load
+require_relative 'component_definition'

@@ -1,5 +1,5 @@
 require_relative 'attributes'
-require_relative 'util'
+require_relative '../util'
 
 module PipeDsl
 
