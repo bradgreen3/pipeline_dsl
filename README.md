@@ -1,8 +1,10 @@
 # PipeDsl
 
-Welcome to your new gem! In this directory, you'll find the files you need to be able to package up your Ruby library into a gem. Put your Ruby code in the file `lib/pipe_dsl`. To experiment with that code, run `bin/console` for an interactive prompt.
+[![Build Status](https://travis-ci.com/Ibotta/pipeline_dsl.svg?token=p3cwTFx7ToZtzJ6tLUid&branch=master)](https://travis-ci.com/Ibotta/pipeline_dsl) [![Code Climate](https://codeclimate.com/repos/57ffbcd69a61e94f2f002cd8/badges/1e454b2d835817f63388/gpa.svg)](https://codeclimate.com/repos/57ffbcd69a61e94f2f002cd8/feed) [![Test Coverage](https://codeclimate.com/repos/57ffbcd69a61e94f2f002cd8/badges/1e454b2d835817f63388/coverage.svg)](https://codeclimate.com/repos/57ffbcd69a61e94f2f002cd8/coverage)
 
-TODO: Delete this and the text above, and describe your gem
+This gem provides a wrapper DSL and CLI tools for managing AWS DataPipeline definitions.
+
+Typically DataPipeline definitions are managed through lengthy, repetitive JSON files.  The goal of this project is to provide a reusable interface to generating definitions, and a heplful wrapper around the most common API operations.
 
 ## Installation
 
@@ -22,7 +24,17 @@ Or install it yourself as:
 
 ## Usage
 
-TODO: Write usage instructions here
+### Ruby API
+
+### CLI
+
+## TODO
+
+* [x] Base object DSL
+* [x] Basic API operations
+* [x] Reusable component framework
+* [ ] Simpler/cleaner DSL (per type/component registration)
+* [ ] High code coverage
 
 ## Development
 

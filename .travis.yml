@@ -1,4 +1,25 @@
+#instance config
+sudo: required
+dist: trusty
+
+#language config
 language: ruby
+cache: bundler
 rvm:
-  - 2.1.6
-before_install: gem install bundler -v 1.10.5
+  - 2.1.9
+
+#repo config
+
+#build config
+env:
+  global:
+    - CONTINUOUS_INTEGRATION=true
+    - COVERAGE=true
+#default is the below
+# script: bundle exec rake spec
+
+#extras config
+addons:
+  code_climate:
+    repo_token:
+      secure: "A382BpxV7Pz260fEsGf/vG30wS8iT6GT/tCTEcqFT1m6CkRfeQh68aLzt4VOKd13UtZKiJCN0DNsALZyEzaM3q2QmZHYE9KQhGv4nPTcxkW8Sk2XM7hGA93jiRqDCUrjqV8d00DMcA4CVWYVrUGqoOavhuUwS0cnCLa5lXKmb4EQyv121u1LqXUbsK0o4gTGZWlPYCo/UkN4PxD92u8jS1kKTQArfc3h6Xul55Nz5ghTdeEG4zV1r7fgtr2nVgAkhR5cMkKo7XB0vvmqyDPuMSJsRcMUzleCTksMwti4GBHb+XlTUPwRQ/Nsv2wuZRlFh69qRYFB8CddJm6Y3/ASpA+fpILBZrHO34sI9jCyOMcgz7EvzUdd55E9CWctmIYsr2tcQbB95FDXUqp7uI/bvPxKAAhlqna1UgLKibLXIW5+CR3NM6/OdH4vTfNmamVZNMuLArZfPGQdMQXaKIOIoMLW6BpC8ehbwXanI0iQcrAv50du/ctL4+tqC/fTd0dx2LweK/pKu3Zs0AxxT12zGMO7AKIepCMHvmtzsqGvwt0EgT3A88FCoz+LBkTaXpELmokjotSY6/kSNkAf1jYHk5VIJ7ddX7kMrOASbbppz/FPDgS7HGge6ksF2egOEHTrBAjGuIgx3ogO375RE7AMPxEmaKdbwDJKmaU5TQelWp4="

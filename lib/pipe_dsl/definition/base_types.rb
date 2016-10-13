@@ -18,7 +18,7 @@ module PipeDsl
     # @param [String] id pipeline object id
     # @param [String] name symbolic object name
     # @param [Hash] fields object fields (in standard (json) form)
-    # @yield [FieldsContainer] fields container
+    # @yield [Fields] fields container
     # @return [PipelineObject] generated pipeline object
     def pipeline_object(params = {}, &block)
       pipeline_objects << obj = PipelineObject.new(params, &block)
@@ -28,7 +28,7 @@ module PipeDsl
     #add a new parameter object
     # @param [String] id
     # @param [Hash] attributes hash
-    # @yield [Aws::DataPipeline::Types::ParameterObject] new object dsl style
+    # @yield [Attributes] attributes container
     # @return [Aws::DataPipeline::Types::ParameterObject] new object added
     def parameter_object(params, &block)
       parameter_objects << obj = ParameterObject.new(params, &block)
