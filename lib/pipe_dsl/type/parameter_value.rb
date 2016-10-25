@@ -2,7 +2,7 @@ require_relative '../util'
 
 module PipeDsl
 
-  #wrap a ParameterObject to provide DSL and serialization
+  #wrap a ParameterValue to provide DSL and serialization
   class ParameterValue < Aws::DataPipeline::Types::ParameterValue
 
     #init

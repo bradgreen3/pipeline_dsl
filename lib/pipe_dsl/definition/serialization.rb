@@ -1,9 +1,12 @@
 module PipeDsl
+
+  #serialization-specific methods for definition
   module Serialization
     def self.included(base)
       base.extend(ClassMethods)
     end
 
+    #classmethods extended
     module ClassMethods
       #load a definition from a cli json string
       # @param [String] json

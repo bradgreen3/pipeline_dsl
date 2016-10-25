@@ -1,6 +1,8 @@
 require_relative '../definition'
 
 module PipeDsl
+
+  #define a reusable component (objects, parameters and values)
   class ComponentDefinition < Definition
 
     #hook which adds component to definition DSL
@@ -21,5 +23,3 @@ module PipeDsl
 
   end
 end
-
-

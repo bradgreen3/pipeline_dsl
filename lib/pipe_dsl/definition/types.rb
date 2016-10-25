@@ -3,6 +3,8 @@ require_relative '../type/parameter_object'
 require_relative '../type/parameter_value'
 
 module PipeDsl
+
+  #types specific methods, including dynamic type addition
   module Types
     def self.included(base)
       base.expose :pipeline_object
@@ -24,7 +26,6 @@ module PipeDsl
       Dir["#{File.dirname(__FILE__)}/../type/pipeline_object/*.rb"].each do |f|
         require f
       end
-
     end
 
     #add a new pipeline object
@@ -70,8 +71,9 @@ module PipeDsl
       obj
     end
 
-    #todo Default special type
+    #TODO: Default special type
 
+    #registration global class methods
     module ClassMethods
 
       #registers a new component with the definition class for DSL usage
@@ -87,7 +89,7 @@ module PipeDsl
       #registers a new component with the definition class for DSL usage
       # @param [Class] Definition class
       def register_pipeline_object(klass)
-        define_method(klass.symbol_name) do |params={}, &block|
+        define_method(klass.symbol_name) do |params = {}, &block|
           pipeline_objects << (obj = klass.new(params, &block))
           obj
         end

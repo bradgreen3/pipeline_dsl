@@ -39,7 +39,7 @@ module PipeDsl
         redshift_depends_on
       end
 
-      super(pipeline_objects:[], parameter_objects: [], parameter_values: [], &block)
+      super(pipeline_objects: [], parameter_objects: [], parameter_values: [], &block)
 
       build_definition(table_name: table_name)
     end
