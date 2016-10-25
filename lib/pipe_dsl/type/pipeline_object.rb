@@ -42,6 +42,13 @@ module PipeDsl
       else
         raise ArgumentError, "type must be string, symbol, hash or object"
       end
+
+      if self.class < PipelineObject
+        #came from DSL init
+        fields[:type] = t = Util.demodulize(self.to_s)
+        id ||= "#{t}Object"
+      end
+
       raise ArugmentError, 'id must be specified' unless id
       name ||= id
 
@@ -56,5 +63,22 @@ module PipeDsl
       self.fields.as_cli_json.merge(id: id, name: name)
     end
 
+    #hook which adds component to definition DSL
+    def self.inherited(subclass)
+      Definition.register_pipeline_object(subclass)
+    end
+
+    def self.symbol_name
+      Util.underscore(Util.demodulize(self.to_s))
+    end
+
+    #factory to get an instance of this class by snakecase name
+    def self.factory(name)
+      class_name = "PipeDsl::" << Util.demodulize(Util.camelize(name.to_s))
+      return self.const_get(class_name) if Util.descendants(self).map(&:name).include?(class_name)
+      raise ArgumentError, 'Name is not a pipeline object'
+    end
+
   end
 end
+

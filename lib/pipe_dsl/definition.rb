@@ -1,4 +1,4 @@
-require_relative 'definition/base_types'
+require_relative 'definition/types'
 require_relative 'definition/serialization'
 require 'cleanroom'
 
@@ -11,7 +11,7 @@ module PipeDsl
 
     #cleanroom provides the wrapper for the DSL input
     include Cleanroom
-    include BaseTypes
+    include Types
     include Serialization
 
     #init
@@ -93,18 +93,5 @@ module PipeDsl
     expose :<<
     expose :add
 
-    #add a component (prebuilt struct of objects)
-    # @param [String|Symbol] name of component
-    # @param [Various] parameters
-    # @yield [ComponentDefinition] definition block
-    def component(name, **parameters, &block)
-      concat(obj = ComponentDefinition.factory(name).new(**parameters, &block))
-      obj
-    end
-    expose :component
-
   end
 end
-
-#TODO: how to lazy-load
-require_relative 'component_definition'

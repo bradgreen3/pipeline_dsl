@@ -1,4 +1,5 @@
 require_relative '../component_definition'
+
 module PipeDsl
   #common components for datapipeline
   class MysqlRedshiftCopy < ComponentDefinition

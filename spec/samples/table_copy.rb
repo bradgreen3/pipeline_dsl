@@ -1,3 +1,5 @@
+require 'pry'
+
 sch = pipeline_object('Schedule') do |s|
   s['startAt'] = 'FIRST_ACTIVATION_DATE_TIME'
   s['period'] = '2 Hours'
@@ -51,7 +53,7 @@ end
 
 dataf = pipeline_object(id: "DataFormat", type: "CSV")
 
-first_table = component(:mysql_redshift_copy,
+first_table = mysql_redshift_copy(
   table_name: 'first',
   rds_db: rds_db,
   rds_runner: dump_ec2,
@@ -60,18 +62,15 @@ first_table = component(:mysql_redshift_copy,
   data_format: dataf,
   s3_base_path: "s3://sample-data/output/"
 )
-concat(first_table)
 
-second_table = component(:mysql_redshift_copy,
+second_table = mysql_redshift_copy(
   table_name: 'second',
   depends_on: first_table,
   rds_depends_on: true
   )
-concat(second_table)
 
-third_table = component(:mysql_redshift_copy,
+third_table = mysql_redshift_copy(
   table_name: 'three',
   depends_on: second_table,
   rds_depends_on: true
   )
-concat(third_table)
