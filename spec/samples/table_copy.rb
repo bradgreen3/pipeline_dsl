@@ -1,10 +1,10 @@
 require 'pry'
 
-sch = pipeline_object('Schedule') do |s|
+sch = schedule do |s|
   s['startAt'] = 'FIRST_ACTIVATION_DATE_TIME'
   s['period'] = '2 Hours'
 end
-failure = pipeline_object(id: 'FailureAlarm', type: 'SnsAlarm') do |f|
+failure = sns_alarm('FailureAlarm') do |f|
   f['topicArn'] = "arn:aws:sns:us-east-1:id:redshift-debug"
   f['subject'] = "RDS to Redshift copy failed"
   f['message'] = "There was a problem executing %{node.name} at for period %{node.@scheduledStartTime} to %{node.@scheduledEndTime}"
@@ -29,21 +29,21 @@ ec2_defaults = {
   "maxActiveInstances" => "1",
   "logUri" => "s3://sample-logs/data_pipeline_logs/sample/%{type}/%{name}",
 }
-dump_ec2 = pipeline_object(id: 'RDSDumpEc2Resource', type: 'Ec2Resource') do |r|
+dump_ec2 = ec2_resource('RDSDumpEc2Resource') do |r|
   r.concat(ec2_defaults)
 end
-load_ec2 = pipeline_object(id: 'RedshiftLoadEc2Resource', type: 'Ec2Resource') do |r|
+load_ec2 = ec2_resource('RedshiftLoadEc2Resource') do |r|
   r.concat(ec2_defaults)
 end
 
-redshift_db = pipeline_object('RedshiftDatabase') do |r|
+redshift_db = redshift_database do |r|
   r['databaseName'] = 'sample'
   r['username'] = 'user'
   r['*password'] = 'pass'
   r['clusterId'] = 'redshift1'
   r['jdbcProperties'] = ['logLevel=2']
 end
-rds_db = pipeline_object('RdsDatabase') do |r|
+rds_db = rds_database do |r|
   r['databaseName'] = 'sample'
   r['username'] = 'user'
   r['*password'] = 'pass'
@@ -51,7 +51,7 @@ rds_db = pipeline_object('RdsDatabase') do |r|
   r['jdbcProperties'] = ['logLevel=2',"zeroDateTimeBehavior=convertToNull", "connectTimeout=0", "socketTimeout=0"]
 end
 
-dataf = pipeline_object(id: "DataFormat", type: "CSV")
+dataf = csv()
 
 first_table = mysql_redshift_copy(
   table_name: 'first',

@@ -30,9 +30,18 @@ module PipeDsl
         id = hsh.delete('id')
         name = hsh.delete('name')
         fields = hsh['fields'] || hsh
+        if self.class < PipelineObject
+          #empty dsl init id, use classname
+          fields[:type] = t = Util.demodulize(self.class.to_s)
+          id ||= "#{t}Object"
+        end
       when String, Symbol
         if params == DEFAULT_ID #special Default, no type field
           name = id = DEFAULT_ID
+        elsif self.class < PipelineObject
+          #came from DSL init, make string the id
+          id = params
+          fields[:type] = Util.demodulize(self.class.to_s)
         else
           #simple defaults
           id ||= "#{params}Object"
@@ -41,12 +50,6 @@ module PipeDsl
         end
       else
         raise ArgumentError, "type must be string, symbol, hash or object"
-      end
-
-      if self.class < PipelineObject
-        #came from DSL init
-        fields[:type] = t = Util.demodulize(self.to_s)
-        id ||= "#{t}Object"
       end
 
       raise ArugmentError, 'id must be specified' unless id
@@ -81,4 +84,3 @@ module PipeDsl
 
   end
 end
-
