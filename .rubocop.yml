@@ -65,3 +65,9 @@ Style/CaseIndentation:
 # SupportedStyles: special_inside_parentheses, consistent, align_braces
 Style/IndentHash:
   EnforcedStyle: consistent
+
+Metrics/BlockLength:
+  Enabled: true
+  Max: 100
+  Exclude:
+    - 'spec/**/*.rb'

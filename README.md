@@ -33,7 +33,7 @@ Or install it yourself as:
 * [x] Base object DSL
 * [x] Basic API operations
 * [x] Reusable component framework
-* [ ] Simpler/cleaner DSL (per type/component registration)
+* [x] Simpler/cleaner DSL (per type/component registration)
 * [ ] High code coverage
 
 ## Development
