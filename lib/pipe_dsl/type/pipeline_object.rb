@@ -44,7 +44,7 @@ module PipeDsl
           fields[:type] = Util.demodulize(self.class.to_s)
         else
           #simple defaults
-          id ||= "#{params}Object"
+          id ||= params
           id = id.to_s
           fields[:type] = params
         end

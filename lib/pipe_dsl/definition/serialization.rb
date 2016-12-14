@@ -21,7 +21,7 @@ module PipeDsl
       # @return [Definition] loaded def
       def from_cli_hash(hsh)
         self.new.tap do |d|
-          hsh['objects'].each { |o| d.pipeline_object(o) }
+          hsh.fetch('objects', []).each { |o| d.pipeline_object(o) }
           hsh.fetch('parameters', []).each { |o| d.parameter_object(o) }
           hsh.fetch('values', {}).each do |id, value|
             d.parameter_value(id, value)
@@ -29,6 +29,8 @@ module PipeDsl
         end
       end
     end
+
+    # @todo  includes() to include, parse() to parse a file and return defn
 
     #turn the definition into the hash for json usable by the aws cli
     # @return [Hash] hash for json encoding

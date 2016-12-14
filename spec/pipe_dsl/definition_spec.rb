@@ -1,5 +1,4 @@
 require 'spec_helper'
-require 'pry'
 
 describe PipeDsl::Definition do
 
@@ -7,12 +6,12 @@ describe PipeDsl::Definition do
     it 'json roundtrip' do
       str = File.read(File.join($SPEC_ROOT, 'samples', 'table_copy.json'))
       parsed = JSON.parse(str)
-      parsed_objects = parsed['objects'].sort_by { |v| v['id'] }
+      parsed_objects = parsed['objects']
 
       definition = described_class.from_cli_json(str).as_cli_json
       #run through json to stringify keys
       definition = JSON.parse(JSON.dump(definition))
-      objects = definition['objects'].sort_by { |v| v['id'] }
+      objects = definition['objects']
 
       expect(parsed_objects).to match_array(objects)
     end
@@ -44,54 +43,147 @@ describe PipeDsl::Definition do
     end
   end
 
-  describe '.from_cli_json' do
-    it 'parses objects'
-    it 'parses parameters'
-    it 'parses values'
+  describe '.find' do
+    let(:defn) do
+      described_class.new(
+        pipeline_objects: [
+          { 'id' => 'first', 'name' => 'first', 'type' => 'Test' }
+        ],
+        parameter_objects: [
+          { 'id' => 'second' }
+        ],
+        parameter_values: [
+          { 'id' => 'third', 'string_value' => 'third value' }
+        ]
+      )
+    end
+    it 'finds an ID in the list' do
+      first = defn.find('first')
+      expect(first.name).to eq('first')
+      expect(first.fields.first.string_value).to eq('Test')
+    end
   end
 
-  describe '.as_cli_json' do
-    it 'generates object hashes'
-    it 'generates parameter hashes'
-    it 'generates value hashes'
-  end
-
-  describe '.to_cli_json' do
-    it 'generates a json string'
+  describe '.define' do
+    it 'yields for dsl' do
+      subject.define do |d|
+        expect(d).to eq(subject)
+      end
+    end
   end
 
   describe '.concat' do
-    it 'merges a definition'
+    let(:defn) do
+      described_class.new(
+        pipeline_objects: [
+          { 'id' => 'first', 'name' => 'first', 'type' => 'Test' }
+        ],
+        parameter_objects: [
+          { 'id' => 'second' }
+        ],
+        parameter_values: [
+          { 'id' => 'third', 'string_value' => 'third value' }
+        ]
+      )
+    end
+
+    it 'merges a definition' do
+      expect(subject.pipeline_objects.map(&:id)).to eq([])
+      expect(subject.parameter_objects.map(&:id)).to eq([])
+      expect(subject.parameter_values.map(&:id)).to eq([])
+
+      subject.concat(defn)
+
+      expect(subject.pipeline_objects.map(&:id)).to eq(%w(first))
+      expect(subject.parameter_objects.map(&:id)).to eq(%w(second))
+      expect(subject.parameter_values.map(&:id)).to eq(%w(third))
+    end
   end
 
-  describe '.add' do
+  xdescribe '.merge' do
+    let(:defn) do
+      described_class.new(
+        pipeline_objects: [
+          { 'id' => 'first', 'name' => 'first', 'type' => 'Test' }
+        ],
+        parameter_objects: [
+          { 'id' => 'second' }
+        ],
+        parameter_values: [
+          { 'id' => 'third', 'string_value' => 'third value' }
+        ]
+      )
+    end
+
+    it 'merges a definition' do
+      expect(subject.pipeline_objects.map(&:id)).to eq([])
+      expect(subject.parameter_objects.map(&:id)).to eq([])
+      expect(subject.parameter_values.map(&:id)).to eq([])
+
+      out = subject.merge(defn)
+
+      expect(out).to_not eq(subject)
+      expect(out).to_not eq(defn)
+
+      expect(out.pipeline_objects.map(&:id)).to eq(%w(first))
+      expect(out.parameter_objects.map(&:id)).to eq(%w(second))
+      expect(out.parameter_values.map(&:id)).to eq(%w(third))
+
+      #leaves subject alone
+      expect(subject.pipeline_objects.map(&:id)).to eq([])
+      expect(subject.parameter_objects.map(&:id)).to eq([])
+      expect(subject.parameter_values.map(&:id)).to eq([])
+
+    end
   end
 
-  describe '.pipeline_object' do
-    it 'adds a new object'
-    it 'adds a new hash'
-    it 'adds a new params'
+  describe '.<<' do
+    let(:defn) do
+      described_class.new(
+        pipeline_objects: [
+          { 'id' => 'first', 'name' => 'first', 'type' => 'Test' }
+        ],
+        parameter_objects: [
+          { 'id' => 'second' }
+        ],
+        parameter_values: [
+          { 'id' => 'third', 'string_value' => 'third value' }
+        ]
+      )
+    end
+
+    it 'adds an object' do
+      po = PipeDsl::PipelineObject.new('Test')
+      subject << po
+
+      expect(subject.pipeline_objects.size).to eq 1
+      expect(subject.pipeline_objects.first.id).to eq 'Test'
+    end
+    it 'adds a parameter' do
+      po = PipeDsl::ParameterObject.new('Test')
+      subject << po
+
+      expect(subject.parameter_objects.size).to eq 1
+      expect(subject.parameter_objects.first.id).to eq 'Test'
+    end
+    it 'adds a value' do
+      v = PipeDsl::ParameterValue.new('Test')
+      subject << v
+
+      expect(subject.parameter_values.size).to eq 1
+      expect(subject.parameter_values.first.id).to eq 'Test'
+
+    end
+    it 'concats a whole definition' do
+      subject << defn
+      expect(subject.pipeline_objects.map(&:id)).to eq(%w(first))
+      expect(subject.parameter_objects.map(&:id)).to eq(%w(second))
+      expect(subject.parameter_values.map(&:id)).to eq(%w(third))
+    end
   end
 
-  describe '.parameter_object' do
-    it 'adds a new object'
-    it 'adds a new hash'
-    it 'adds a new params'
-  end
-
-  describe '.parameter_value' do
-    it 'adds a new object'
-    it 'adds a new hash'
-    it 'adds a new params'
-  end
-
-  describe '.component' do
-
-  end
-
-  describe '.find' do
-  end
-  describe '.define' do
+  xdescribe '.dup' do
+    it 'deeply duplicates'
   end
 
 end

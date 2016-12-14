@@ -33,6 +33,7 @@ module PipeDsl
     end
 
     #find id in list of objects
+    # @todo should we use id for find/unique using a hash at add time?
     # @param [String] id
     # @return [PipelineObject,ParameterObject,ParameterValue] found id
     def find(id)
@@ -64,14 +65,15 @@ module PipeDsl
     expose :merge!
 
     #add a definition object, return a new copy
+    # @todo need to add a deep dup method to all objects
     # @param [Aws::DataPipeline::Types::PutPipelineDefinitionInput] definition to add
     # @return [Definition]
-    def merge(d)
-      out = self.dup
-      out.concat(d)
-      out
-    end
-    alias_method :+, :merge
+    # def merge(d)
+    #   out = self.dup
+    #   out.concat(d)
+    #   out
+    # end
+    # alias_method :+, :merge
 
     #add an object
     # @param [Aws::DataPipeline::Types::*] object
