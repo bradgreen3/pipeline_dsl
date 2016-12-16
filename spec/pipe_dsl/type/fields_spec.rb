@@ -72,9 +72,9 @@ describe PipeDsl::Fields do
   end
 
   describe '.as_cli_json' do
-    it { expect(subject.concat(kk: 'vv').as_cli_json).to eq('kk' => 'vv') }
-    it { expect(subject.concat(kk: %w(vv vv2)).as_cli_json).to eq('kk' => %w(vv vv2)) }
-    it { expect(subject.concat(kk: { ref: 'vv' }).as_cli_json).to eq('kk' => { ref: 'vv' }) }
+    it { expect(subject.concat(kk: 'vv').as_cli_json).to eq(kk: 'vv') }
+    it { expect(subject.concat(kk: %w(vv vv2)).as_cli_json).to eq(kk: %w(vv vv2)) }
+    it { expect(subject.concat(kk: { ref: 'vv' }).as_cli_json).to eq(kk: { ref: 'vv' }) }
   end
 
   describe '.field' do

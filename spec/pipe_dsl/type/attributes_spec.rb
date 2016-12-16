@@ -66,13 +66,13 @@ describe PipeDsl::Attributes do
       expect(subject[1].key).to eq 'kk'
       expect(subject[1].string_value).to eq 'vv2'
     end
-    it { expect { subject.concat(%w(vv vv2)) }.to raise_error(ArgumentError, 'All entries must be ParameterAttribute') }
-    it { expect { subject.concat('vv') }.to raise_error(ArgumentError, 'Must be a Hash, or Array of ParameterAttribute') }
+    it { expect { subject.concat(%w(vv vv2)) }.to raise_error(ArgumentError, 'All entries must be Attribute') }
+    it { expect { subject.concat('vv') }.to raise_error(ArgumentError, 'Must be a Hash, or Array of Attribute') }
   end
 
   describe '.as_cli_json' do
-    it { expect(subject.concat(kk: 'vv').as_cli_json).to eq('kk' => 'vv') }
-    it { expect(subject.concat(kk: %w(vv vv2)).as_cli_json).to eq('kk' => %w(vv vv2)) }
+    it { expect(subject.concat(kk: 'vv').as_cli_json).to eq(kk: 'vv') }
+    it { expect(subject.concat(kk: %w(vv vv2)).as_cli_json).to eq(kk: %w(vv vv2)) }
   end
 
   describe '.attribute' do

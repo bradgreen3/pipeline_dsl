@@ -3,7 +3,7 @@ require_relative '../util'
 module PipeDsl
 
   #wrap an array of ParameterObject attributes
-  # similar, but mostly different, to Fields
+  # similar to Fields, but no refval and different names
   class Attributes < Array
 
     #new attributes list
@@ -18,11 +18,12 @@ module PipeDsl
     # @return [Hash] for serialization
     def as_cli_json
       self.each_with_object({}) do |f, hsh|
-        if hsh[f.key]
-          hsh[f.key] = [hsh[f.key]] unless hsh[f.key].is_a?(Array)
-          hsh[f.key] << f.string_value
+        key = f.key.to_sym
+        if hsh[key]
+          hsh[key] = [hsh[key]] unless hsh[key].is_a?(Array)
+          hsh[key] << f.string_value
         else
-          hsh[f.key] = f.string_value
+          hsh[key] = f.string_value
         end
       end
     end
@@ -38,10 +39,10 @@ module PipeDsl
       when Hash
         super(from_hash(attributes))
       when Array
-        raise ArgumentError, "All entries must be ParameterAttribute" unless attributes.all? { |a| a.is_a?(Aws::DataPipeline::Types::ParameterAttribute) }
+        raise ArgumentError, "All entries must be Attribute" unless attributes.all? { |a| a.is_a?(Aws::DataPipeline::Types::ParameterAttribute) }
         super
       else
-        raise ArgumentError, "Must be a Hash, or Array of ParameterAttribute"
+        raise ArgumentError, "Must be a Hash, or Array of Attribute"
       end
 
       #TODO: can't decide if this makes more sense as instance_eval

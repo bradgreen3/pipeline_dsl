@@ -3,7 +3,6 @@ require_relative '../util'
 module PipeDsl
 
   #wrap an array of PipelineObject fields
-  # similar, but mostly different, to Attributes
   class Fields < Array
 
     #new fields list
@@ -18,13 +17,14 @@ module PipeDsl
     # @return [Hash] for serialization
     def as_cli_json
       self.each_with_object({}) do |f, hsh|
+        key = f.key.to_sym
         if !f.ref_value.nil?
-          hsh[f.key] = { ref: f.ref_value }
-        elsif hsh[f.key]
-          hsh[f.key] = [hsh[f.key]] unless hsh[f.key].is_a?(Array)
-          hsh[f.key] << f.string_value
+          hsh[key] = { ref: f.ref_value }
+        elsif hsh[key]
+          hsh[key] = [hsh[key]] unless hsh[key].is_a?(Array)
+          hsh[key] << f.string_value
         else
-          hsh[f.key] = f.string_value
+          hsh[key] = f.string_value
         end
       end
     end

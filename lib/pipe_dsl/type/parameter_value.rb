@@ -28,12 +28,12 @@ module PipeDsl
         string_value = hsh.delete('string_value')
       when Array
         #came from a each'ed hash
-        id = id[0]
-        string_value = id[1]
+        id = params[0]
+        string_value = params[1]
       when String, Symbol
         id = params
       else
-        raise ArgumentError, "id must be string, symbol, hash or object"
+        raise ArgumentError, "parameter must be string, symbol, hash or object"
       end
 
       super(id: id, string_value: string_value)
@@ -45,7 +45,7 @@ module PipeDsl
     # @note  this only returns what is necessary for this element in a hash
     # @return [Hash] aws cli format
     def as_cli_json
-      [self.id, self.value]
+      [self.id, self.string_value]
     end
 
   end
