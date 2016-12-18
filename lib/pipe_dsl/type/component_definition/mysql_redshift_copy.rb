@@ -41,6 +41,8 @@ module PipeDsl
 
       super(pipeline_objects: [], parameter_objects: [], parameter_values: [], &block)
 
+      #todo validate enough parameters exist
+
       build_definition(table_name: table_name)
     end
 

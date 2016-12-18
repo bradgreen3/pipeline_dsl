@@ -23,7 +23,7 @@ module PipeDsl
       when Aws::DataPipeline::Types::PipelineObject
         #shallow dup/cast
         id = params.id
-        name = params.name.to_s if name
+        name = params.name
         fields = params.fields
       when Hash
         hsh = Util.stringify_keys(params)
@@ -41,7 +41,7 @@ module PipeDsl
         elsif self.class < PipelineObject
           #came from DSL init, make string the id
           id = params
-          fields[:type] = Util.demodulize(self.class.to_s)
+          fields[:type] = self.class.type_name
         else
           #simple defaults
           id ||= params
@@ -52,7 +52,7 @@ module PipeDsl
         raise ArgumentError, "type must be string, symbol, hash or object"
       end
 
-      raise ArugmentError, 'id must be specified' unless id
+      raise ArgumentError, 'id must be specified' unless id
       name ||= id
 
       super(id: id, name: name, fields: Fields.new(fields, &block))
@@ -72,11 +72,15 @@ module PipeDsl
     end
 
     def self.symbol_name
-      Util.underscore(Util.demodulize(self.to_s))
+      Util.underscore(Util.demodulize(self.to_s)).to_sym
     end
 
-    #factory to get an instance of this class by snakecase name
-    def self.factory(name)
+    def self.type_name
+      Util.demodulize(self.to_s)
+    end
+
+    #factory to get a class by snakecase name
+    def self.class_factory(name)
       class_name = "PipeDsl::" << Util.demodulize(Util.camelize(name.to_s))
       return self.const_get(class_name) if Util.descendants(self).map(&:name).include?(class_name)
       raise ArgumentError, 'Name is not a pipeline object'

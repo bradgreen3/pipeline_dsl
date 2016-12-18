@@ -67,7 +67,7 @@ module PipeDsl
     # @param [Various] parameters
     # @yield [ComponentDefinition] definition block
     def component(name, **parameters, &block)
-      concat(obj = ComponentDefinition.factory(name).new(**parameters, &block))
+      concat(obj = ComponentDefinition.class_factory(name).new(**parameters, &block))
       obj
     end
 

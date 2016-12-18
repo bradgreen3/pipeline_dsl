@@ -18,8 +18,9 @@ module PipeDsl
 
       desc 'version', 'Get the version'
       def version
-        puts "#{self.class} #{VERSION}"
+        puts "#{self.class.to_s.split(':').first  } #{VERSION}"
         puts "ruby: #{RUBY_VERSION} thor: #{Thor::VERSION}" if options[:verbose]
+        VERSION
       end
 
     end

@@ -1,7 +1,11 @@
 require_relative '../pipeline_object'
 
 module PipeDsl
-  class TSV < PipelineObject
+  class Tsv < PipelineObject
+
+    def self.type_name
+      super.upcase
+    end
 
   end
 end

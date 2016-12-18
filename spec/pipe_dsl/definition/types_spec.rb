@@ -44,6 +44,7 @@ describe PipeDsl::Definition do
   end
 
   describe '.component' do
+    # TODO: need a good way to mock this for a shorter test
     it 'adds a component'
     it 'adds a component and calls block'
   end
