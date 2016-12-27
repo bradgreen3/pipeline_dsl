@@ -32,7 +32,7 @@ module PipeDsl
         fields = hsh['fields'] || hsh
         if self.class < PipelineObject
           #empty dsl init id, use classname
-          fields[:type] = t = Util.demodulize(self.class.to_s)
+          fields[:type] = t = self.class.type_name
           id ||= "#{t}Object"
         end
       when String, Symbol

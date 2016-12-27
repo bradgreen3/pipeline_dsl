@@ -13,7 +13,7 @@ describe PipeDsl::ParameterValue do
       expect(obj.string_value).to be_nil
     end
     it 'creates new from array' do
-      obj = described_class.new(['id', 'val'])
+      obj = described_class.new(%w(id val))
       expect(obj.id).to eq 'id'
       expect(obj.string_value).to eq 'val'
     end

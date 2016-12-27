@@ -34,11 +34,11 @@ describe PipeDsl::ParameterObject do
     it 'returns a hash for cli' do
       obj = described_class.new(id: 'test', string_value: 'val', type: 'String')
 
-      expect(obj.as_cli_json).to eq({
-                                      id: 'test',
-                                      string_value: 'val',
-                                      type: 'String'
-      })
+      expect(obj.as_cli_json).to eq(
+        id: 'test',
+        string_value: 'val',
+        type: 'String'
+      )
     end
   end
 

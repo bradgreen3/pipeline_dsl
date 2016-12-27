@@ -4,13 +4,16 @@ module PipeDsl
   #common components for datapipeline
   class MysqlRedshiftCopy < ComponentDefinition
 
+    DEFAULT_SELECT_QUERY = "SELECT * FROM %{table} WHERE updated_at > '%{format(minusHours(@scheduledStartTime,48),'YYYY-MM-dd hh:mm:ss')}'".freeze
+    DEFAULT_REDSHIFT_INSERT_MODE = 'OVERWRITE_EXISTING'.freeze
+
     attr_accessor :table_name, :data_format, :s3_base_path, :select_query, :retries
     attr_accessor :rds_db, :rds_runner, :rds_depends_on, :rds_copy
-    attr_accessor :redshift_db, :redshift_runner, :redshift_depends_on, :redshift_copy
+    attr_accessor :redshift_db, :redshift_runner, :redshift_depends_on, :redshift_copy, :redshift_insert_mode
 
     #init
     # @param [String] table_name
-    def initialize(table_name:, depends_on: nil, rds_db: nil, rds_runner: nil, redshift_db: nil, redshift_runner: nil, data_format: nil, s3_base_path: nil, select_query: nil, rds_depends_on: nil, redshift_depends_on: nil, retries: nil, &block)
+    def initialize(table_name:, depends_on: nil, rds_db: nil, rds_runner: nil, redshift_db: nil, redshift_runner: nil, data_format: nil, s3_base_path: nil, select_query: nil, rds_depends_on: nil, redshift_depends_on: nil, retries: nil, redshift_insert_mode: nil, &block)
 
       raise ArgumentError, "depends_on must be a #{self.class}" if depends_on && !depends_on.is_a?(self.class)
 
@@ -19,13 +22,13 @@ module PipeDsl
       @rds_runner = rds_runner || (depends_on && depends_on.rds_runner)
       @redshift_db = redshift_db || (depends_on && depends_on.redshift_db)
       @redshift_runner = redshift_runner || (depends_on && depends_on.redshift_runner)
+      @redshift_insert_mode = redshift_insert_mode || (depends_on && depends_on.redshift_insert_mode) || DEFAULT_REDSHIFT_INSERT_MODE
       @data_format = data_format || (depends_on && depends_on.data_format)
       @s3_base_path = s3_base_path || (depends_on && depends_on.s3_base_path)
+      @retries = retries || (depends_on && depends_on.retries) || 1
       #TODO: validate these?
 
-      @retries = retries || (depends_on && depends_on.retries) || 1
-
-      @select_query = select_query
+      @select_query = select_query || DEFAULT_SELECT_QUERY
 
       @rds_depends_on = if rds_depends_on == true
         depends_on.rds_copy
@@ -53,7 +56,7 @@ module PipeDsl
       rds_table = pipeline_object(type: "MySqlDataNode", id: "#{table_name}MySqlDataNodeObject") do |m|
         m['database'] = rds_db
         m['table'] = table_name
-        m['selectQuery'] = select_query || "SELECT * from %{table} where updated_at > '%{format(minusHours(@scheduledStartTime,48),'YYYY-MM-dd hh:mm:ss')}'"
+        m['selectQuery'] = select_query
       end
 
       s3 = pipeline_object(type: "S3DataNode", id: "#{table_name}S3DataNodeObject") do |s|
@@ -78,6 +81,7 @@ module PipeDsl
       @redshift_copy = pipeline_object(type: "RedshiftCopyActivity", id: "#{table_name}S3ToRedshiftCopyActivity") do |c|
         c['runsOn'] = redshift_runner
         c['maximumRetries'] = retries
+        c['insertMode'] = redshift_insert_mode
         c['input'] = s3
         c['output'] = redshift_table
         c['dependsOn'] = redshift_depends_on if redshift_depends_on

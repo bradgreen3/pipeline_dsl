@@ -1,4 +1,6 @@
 {
+  "parameters": [],
+  "values": {},
   "objects": [
     {
       "name": "ScheduleObject",
@@ -58,32 +60,32 @@
     },
     {
       "name": "RdsDatabaseObject",
-      "id": "MysqlDatabaseObject",
+      "id": "RdsDatabaseObject",
       "databaseName": "sample",
       "username": "user",
       "*password": "pass",
       "rdsInstanceId": "rds1",
       "type": "RdsDatabase",
-      "jdbcProperties": ["zeroDateTimeBehavior=convertToNull", "connectTimeout=0", "socketTimeout=0"]
+      "jdbcProperties": ["logLevel=2", "zeroDateTimeBehavior=convertToNull", "connectTimeout=0", "socketTimeout=0"]
     },
     {
-      "name": "DataFormat",
-      "id": "DataFormat",
+      "name": "CSVObject",
+      "id": "CSVObject",
       "type": "CSV"
     },
 
     {
-      "name": "RDS: first",
+      "name": "firstMySqlDataNodeObject",
       "id": "firstMySqlDataNodeObject",
       "table": "first",
       "selectQuery": "select id,name,left(notes,500),created_at,updated_at from #{table} where updated_at > '#{format(minusHours(@scheduledStartTime,48),'YYYY-MM-dd hh:mm:ss')}'",
       "type": "MySqlDataNode",
       "database": {
-        "ref": "MysqlDatabaseId_RsqsB"
+        "ref": "RdsDatabaseObject"
       }
     },
     {
-      "name": "first to S3",
+      "name": "firstRdsToS3CopyActivity",
       "id": "firstRdsToS3CopyActivity",
       "input": {
         "ref": "firstMySqlDataNodeObject"
@@ -98,17 +100,17 @@
       "type": "CopyActivity"
     },
     {
-      "name": "S3: first",
+      "name": "firstS3DataNodeObject",
       "id": "firstS3DataNodeObject",
-      "filePath": "s3://sample-logs/data_pipeline_output/first/#{@scheduledStartTime}.csv.gz",
+      "filePath": "s3://sample-data/output/first/#{@scheduledStartTime}.csv.gz",
       "dataFormat": {
-        "ref": "DataFormatId_Iz13M"
+        "ref": "CSVObject"
       },
       "compression": "GZIP",
       "type": "S3DataNode"
     },
     {
-      "name": "S3 to Redshift: first",
+      "name": "firstS3ToRedshiftCopyActivity",
       "id": "firstS3ToRedshiftCopyActivity",
       "input": {
         "ref": "firstS3DataNodeObject"
@@ -124,27 +126,27 @@
       "type": "RedshiftCopyActivity"
     },
     {
-      "name": "Redshift: first",
+      "name": "firstRedshiftDataNodeObject",
       "id": "firstRedshiftDataNodeObject",
       "tableName": "first",
       "type": "RedshiftDataNode",
       "database": {
-        "ref": "RedshiftDatabaseId_RsqsB"
+        "ref": "RedshiftDatabaseObject"
       }
     },
 
     {
-      "name": "RDS: second",
+      "name": "secondMySqlDataNodeObject",
       "id": "secondMySqlDataNodeObject",
       "table": "second",
-      "selectQuery": "select * from #{table} where updated_at > '#{format(minusHours(@scheduledStartTime,48),'YYYY-MM-dd hh:mm:ss')}'",
+      "selectQuery": "SELECT * FROM #{table} WHERE updated_at > '#{format(minusHours(@scheduledStartTime,48),'YYYY-MM-dd hh:mm:ss')}'",
       "type": "MySqlDataNode",
       "database": {
-        "ref": "MysqlDatabaseId_RsqsB"
+        "ref": "RdsDatabaseObject"
       }
     },
     {
-      "name": "second to S3",
+      "name": "secondRdsToS3CopyActivity",
       "id": "secondRdsToS3CopyActivity",
       "input": {
         "ref": "secondMySqlDataNodeObject"
@@ -162,17 +164,17 @@
       "type": "CopyActivity"
     },
     {
-      "name": "S3: second",
+      "name": "secondS3DataNodeObject",
       "id": "secondS3DataNodeObject",
-      "filePath": "s3://sample-logs/data_pipeline_output/second/#{@scheduledStartTime}.csv.gz",
+      "filePath": "s3://sample-data/output/second/#{@scheduledStartTime}.csv.gz",
       "dataFormat": {
-        "ref": "DataFormatId_Iz13M"
+        "ref": "CSVObject"
       },
       "compression": "GZIP",
       "type": "S3DataNode"
     },
     {
-      "name": "S3 to Redshift: second",
+      "name": "secondS3ToRedshiftCopyActivity",
       "id": "secondS3ToRedshiftCopyActivity",
       "input": {
         "ref": "secondS3DataNodeObject"
@@ -188,27 +190,27 @@
       "type": "RedshiftCopyActivity"
     },
     {
-      "name": "Redshift: second",
+      "name": "secondRedshiftDataNodeObject",
       "id": "secondRedshiftDataNodeObject",
       "tableName": "second",
       "type": "RedshiftDataNode",
       "database": {
-        "ref": "RedshiftDatabaseId_RsqsB"
+        "ref": "RedshiftDatabaseObject"
       }
     },
 
     {
-      "name": "RDS: three",
+      "name": "threeMySqlDataNodeObject",
       "id": "threeMySqlDataNodeObject",
       "table": "three",
-      "selectQuery": "select * from #{table} where updated_at > '#{format(minusHours(@scheduledStartTime,48),'YYYY-MM-dd hh:mm:ss')}'",
+      "selectQuery": "SELECT * FROM #{table} WHERE updated_at > '#{format(minusHours(@scheduledStartTime,48),'YYYY-MM-dd hh:mm:ss')}'",
       "type": "MySqlDataNode",
       "database": {
-        "ref": "MysqlDatabaseId_RsqsB"
+        "ref": "RdsDatabaseObject"
       }
     },
     {
-      "name": "three to S3",
+      "name": "threeRdsToS3CopyActivity",
       "id": "threeRdsToS3CopyActivity",
       "input": {
         "ref": "threeMySqlDataNodeObject"
@@ -226,17 +228,17 @@
       "type": "CopyActivity"
     },
     {
-      "name": "S3: three",
+      "name": "threeS3DataNodeObject",
       "id": "threeS3DataNodeObject",
-      "filePath": "s3://sample-logs/data_pipeline_output/three/#{@scheduledStartTime}.csv.gz",
+      "filePath": "s3://sample-data/output/three/#{@scheduledStartTime}.csv.gz",
       "dataFormat": {
-        "ref": "DataFormatId_Iz13M"
+        "ref": "CSVObject"
       },
       "compression": "GZIP",
       "type": "S3DataNode"
     },
     {
-      "name": "S3 to Redshift: three",
+      "name": "threeS3ToRedshiftCopyActivity",
       "id": "threeS3ToRedshiftCopyActivity",
       "input": {
         "ref": "threeS3DataNodeObject"
@@ -252,12 +254,12 @@
       "type": "RedshiftCopyActivity"
     },
     {
-      "name": "Redshift: three",
+      "name": "threeRedshiftDataNodeObject",
       "id": "threeRedshiftDataNodeObject",
       "tableName": "three",
       "type": "RedshiftDataNode",
       "database": {
-        "ref": "RedshiftDatabaseId_RsqsB"
+        "ref": "RedshiftDatabaseObject"
       }
     }
 

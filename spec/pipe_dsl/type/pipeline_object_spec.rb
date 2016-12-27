@@ -46,12 +46,12 @@ describe PipeDsl::PipelineObject do
       obj = described_class.new('test') do |f|
         f['thing'] = 'Test'
       end
-      expect(obj.as_cli_json).to eq({
-                                      id: 'test',
-                                      name: 'test',
-                                      type: 'test',
-                                      thing: 'Test'
-      })
+      expect(obj.as_cli_json).to eq(
+        id: 'test',
+        name: 'test',
+        type: 'test',
+        thing: 'Test'
+      )
     end
   end
 

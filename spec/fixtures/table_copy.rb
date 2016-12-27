@@ -4,6 +4,7 @@ sch = schedule do |s|
   s['startAt'] = 'FIRST_ACTIVATION_DATE_TIME'
   s['period'] = '2 Hours'
 end
+
 failure = sns_alarm('FailureAlarm') do |f|
   f['topicArn'] = "arn:aws:sns:us-east-1:id:redshift-debug"
   f['subject'] = "RDS to Redshift copy failed"
@@ -60,7 +61,8 @@ first_table = mysql_redshift_copy(
   redshift_db: redshift_db,
   redshift_runner: load_ec2,
   data_format: dataf,
-  s3_base_path: "s3://sample-data/output/"
+  s3_base_path: "s3://sample-data/output",
+  select_query: "select id,name,left(notes,500),created_at,updated_at from %{table} where updated_at > '%{format(minusHours(@scheduledStartTime,48),'YYYY-MM-dd hh:mm:ss')}'"
 )
 
 second_table = mysql_redshift_copy(

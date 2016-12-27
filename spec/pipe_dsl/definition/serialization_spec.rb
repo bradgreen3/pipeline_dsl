@@ -56,31 +56,31 @@ describe PipeDsl::Definition do
   describe '.as_cli_json' do
     it 'generates object hashes' do
       subject.pipeline_object('Test')
-      expect(subject.as_cli_json).to eq({
-                                          objects: [
-                                            { type: 'Test', name: 'Test', id: 'Test' }
-                                          ],
-                                          parameters: [],
-                                          values: {}
-      })
+      expect(subject.as_cli_json).to eq(
+        objects: [
+          { type: 'Test', name: 'Test', id: 'Test' }
+        ],
+        parameters: [],
+        values: {}
+      )
     end
     it 'generates parameter hashes' do
       subject.parameter_object('Test')
-      expect(subject.as_cli_json).to eq({
-                                          objects: [],
-                                          parameters: [
-                                            {id: 'Test' }
-                                          ],
-                                          values: {}
-      })
+      expect(subject.as_cli_json).to eq(
+        objects: [],
+        parameters: [
+          { id: 'Test' }
+        ],
+        values: {}
+      )
     end
     it 'generates value hashes' do
       subject.parameter_value('Test', 'value')
-      expect(subject.as_cli_json).to eq({
-                                          objects: [],
-                                          parameters: [],
-                                          values: { 'Test' => 'value' }
-      })
+      expect(subject.as_cli_json).to eq(
+        objects: [],
+        parameters: [],
+        values: { 'Test' => 'value' }
+      )
     end
   end
 

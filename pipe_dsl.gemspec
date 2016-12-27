@@ -24,6 +24,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency 'json', '~> 1.8'
   spec.add_dependency 'thor', '~> 0.19'
   spec.add_dependency 'cleanroom', '~> 1.0'
+  spec.add_dependency 'hashdiff', '~> 0.3'
 
   spec.add_development_dependency "bundler"
   spec.add_development_dependency "rake"
