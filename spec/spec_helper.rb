@@ -1,5 +1,4 @@
 $LOAD_PATH.unshift File.expand_path('../../lib', __FILE__)
-$SPEC_ROOT = File.dirname(File.expand_path(__FILE__))
 
 require 'pipe_dsl'
 require 'awesome_print'
@@ -24,6 +23,7 @@ RSpec.configure do |config|
     Aws.config[:stub_responses] = true
   end
 
+  #adapted from the thor gem specs
   def capture(stream)
     begin
       stream = stream.to_s
@@ -37,7 +37,7 @@ RSpec.configure do |config|
     result
   end
 
-  def source_root
+  def fixture_path
     File.join(File.dirname(__FILE__), "fixtures")
   end
 
