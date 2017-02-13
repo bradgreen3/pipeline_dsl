@@ -138,7 +138,7 @@ module PipeDsl
         error_string = "Warnings:\n"
         result.validation_warnings.each do |o|
           error_string << "\t * #{o.id}:\n"
-          o.errors.each do |e|
+          o.warnings.each do |e|
             error_string << "\t\t * #{e}\n"
           end
         end
