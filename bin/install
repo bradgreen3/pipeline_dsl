@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+set -euo pipefail
+IFS=$'\n\t'
+set -vx
+
+bundle install
+gem build pipe_dsl.gemspec
+gem install pipe_dsl-*.gem
+
+# Do any other automated setup that you need to do here
